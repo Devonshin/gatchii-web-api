@@ -1,0 +1,71 @@
+package com.gatchii.domains.rsa
+
+import com.gatchii.domains.rsa.RsaTable.createdAt
+import com.gatchii.domains.rsa.RsaTable.deletedAt
+import com.gatchii.domains.rsa.RsaTable.exponent
+import com.gatchii.domains.rsa.RsaTable.id
+import com.gatchii.domains.rsa.RsaTable.modulus
+import com.gatchii.domains.rsa.RsaTable.privateKey
+import com.gatchii.domains.rsa.RsaTable.publicKey
+import com.gatchii.shared.exception.NotSupportMethodException
+import com.gatchii.shared.repository.ExposedCrudRepository
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.statements.InsertStatement
+import org.jetbrains.exposed.sql.statements.UpdateStatement
+import java.util.*
+
+/**
+ * Package: com.gatchii.domains.jwk
+ * Created: Devonshin
+ * Date: 16/09/2024
+ */
+
+interface RsaRepository : ExposedCrudRepository<RsaTable, RsaModel, UUID> {
+
+    override fun toRow(domain: RsaModel): RsaTable.(InsertStatement<EntityID<UUID>>) -> Unit = {
+        if (domain.id != null) it[id] = domain.id!!
+        it[publicKey] = domain.publicKey
+        it[privateKey] = domain.privateKey
+        it[exponent] = domain.exponent
+        it[modulus] = domain.modulus
+        if(domain.createdAt != null) {
+            it[createdAt] = domain.createdAt
+        }
+        if(domain.deletedAt != null) {
+            it[deletedAt] = domain.deletedAt
+        }
+        it[deletedAt] = domain.deletedAt?.let {
+            domain.deletedAt
+        }
+    }
+
+    override fun toDomain(row: ResultRow): RsaModel {
+        return RsaModel(
+            id = row[id].value,
+            publicKey = row[publicKey],
+            privateKey = row[privateKey],
+            exponent = row[exponent],
+            modulus = row[modulus],
+            createdAt = row[createdAt],
+            deletedAt = row[deletedAt]
+        )
+    }
+
+    override fun updateRow(domain: RsaModel): RsaTable.(UpdateStatement) -> Unit {
+        throw NotSupportMethodException("Rsa data can't be update.")
+    }
+
+    override fun toBatchRow(): BatchInsertStatement.(RsaModel) -> Unit = {
+        if (it.id != null) this[id] = it.id!!
+        this[publicKey] = it.publicKey
+        this[privateKey] = it.privateKey
+        this[exponent] = it.exponent
+        this[modulus] = it.modulus
+        if(it.createdAt != null) {
+            this[createdAt] = it.createdAt
+        }
+        this[deletedAt] = it.deletedAt
+    }
+}
