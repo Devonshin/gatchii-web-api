@@ -89,12 +89,24 @@ tasks.test {
 }
 
 tasks.register("unitTest", Test::class) {
-    group = "verification"
+    group = "test"
     description = "Run unit tests annotated with @UnitTest"
     useJUnitPlatform {
         includeTags("unitTest")
     }
 }
+
+tasks.register("integrationTest", Test::class) {
+    group = "test"
+    description = "Run unit tests annotated with @IntegrationTest"
+    useJUnitPlatform {
+        includeTags("integrationTest")
+    }
+}
+tasks.processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 sourceSets {
     main {
         resources {
@@ -113,16 +125,7 @@ sourceSets {
         }
     }
 }
-tasks.register("integrationTest", Test::class) {
-    group = "verification"
-    description = "Run unit tests annotated with @IntegrationTest"
-    useJUnitPlatform {
-        includeTags("integrationTest")
-    }
-}
-tasks.processResources {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
+
 /*
 
 sourceSets {

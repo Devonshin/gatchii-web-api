@@ -2,12 +2,9 @@ package com.gatchii.plugins
 
 import com.gatchii.domains.login.loginRoute
 import com.gatchii.domains.main.mainRoute
-import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.autohead.*
 import io.ktor.server.plugins.doublereceive.*
-import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -16,7 +13,7 @@ fun Application.configureRouting() {
     install(DoubleReceive)
 
     routing {
-
+        get("/favicon.ico") { call.respondText("") }
         route("") {
             mainRoute()
         }
