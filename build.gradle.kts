@@ -10,11 +10,12 @@ val jbcryptVersion: String by project
 val ktorVersion: String by project
 
 plugins {
-    kotlin("jvm") version "2.0.21"
-    id("io.ktor.plugin") version "2.3.13"
+    kotlin("jvm") version "2.1.0"
+    id("io.ktor.plugin") version "3.0.2"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
     id("idea")
-    kotlin("plugin.power-assert") version "2.0.0"
+    //kotlin("plugin.power-assert") version "2.0.0"
+    application
 }
 
 group = "com.gatchii"
@@ -28,6 +29,7 @@ application {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
 }
 
 dependencies {
@@ -125,27 +127,3 @@ sourceSets {
         }
     }
 }
-
-/*
-
-sourceSets {
-   */
-/* main {
-        resources {
-            setSrcDirs(listOf("src/main/resources"))
-        }
-        kotlin {
-            //setSrcDirs(listOf("src/main/kotlin"))
-            setSrcDirs(project.sourceSets.getByName("main").kotlin.srcDirs)
-        }
-    }
-    test {
-        resources {
-            setSrcDirs(listOf("src/test/resources"))
-        }
-        kotlin {
-            setSrcDirs(listOf("src/test/kotlin"))
-        }
-    }*//*
-
-}*/

@@ -6,7 +6,6 @@ import com.gatchii.domains.jwt.RefreshTokenService
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
 import io.mockk.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.*
@@ -27,7 +26,7 @@ class LoginServiceImplUnitTest {
     private lateinit var jwtService: JwtService
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
     private lateinit var refreshTockenService: RefreshTokenService
-    private val mockLoginModel = LoginModel("prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, OffsetDateTime.now(), null, UUID.randomUUID())
+    private val loginModelStub = LoginModel("prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID())
 
     @BeforeEach
     fun setUp() {
@@ -39,15 +38,15 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `test login process when valid credentials`() = runBlocking {
+    fun `success login process then return JwtModel`() = runTest {
         //given
         val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "password123")
 
         val mockJwtModel = JwtModel(mockk(), mockk())
 
-        coEvery { loginRepository.findUser("prefix123", "suffix456") } returns mockLoginModel
+        coEvery { loginRepository.findUser("prefix123", "suffix456") } returns loginModelStub
         coEvery { bCryptPasswordEncoder.matches("password123", "encodedPassword") } returns true
-        coEvery { jwtService.generate(any(), any(), any()) } returns "jwtToken"
+        coEvery { jwtService.generate(any()) } returns "jwtToken"
 
         //when
         val result = loginService.loginProcess(loginUserRequest)
@@ -57,19 +56,19 @@ class LoginServiceImplUnitTest {
         assertEquals(mockJwtModel, result)
         coVerify { loginRepository.findUser("prefix123", "suffix456") }
         coVerify { bCryptPasswordEncoder.matches("password123", "encodedPassword") }
-        coVerify(exactly = 1) { jwtService.generate(any(), any(), any()) }
+        coVerify(exactly = 1) { jwtService.generate(any()) }
     }
 
     @Test
-    fun `test login process when invalid password should throw NotFoundUserException`() = runBlocking {
+    fun `invalid password login process should throw NotFoundUserException`() = runTest {
         //given
         val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "wrongPassword")
 
-        coEvery { loginRepository.findUser("prefix123", "suffix456") } returns mockLoginModel
+        coEvery { loginRepository.findUser("prefix123", "suffix456") } returns loginModelStub
         coEvery { bCryptPasswordEncoder.matches("wrongPassword", "encodedPassword") } returns false
         //when
         assertThrows<NotFoundUserException> {
-            val result = loginService.loginProcess(loginUserRequest)
+            loginService.loginProcess(loginUserRequest)
         }
         //then
         coVerify { loginRepository.findUser("prefix123", "suffix456") }
@@ -77,7 +76,7 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `test login process when user not found should thrown NotFoundUserException`() = runBlocking {
+    fun `test login process when user not found should thrown NotFoundUserException`() = runTest {
         //given
         val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "password123")
 
@@ -92,22 +91,22 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `test login fail action throws exception`() = runBlocking {
+    fun `test login fail action throws exception`() = runTest {
         //given
         val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "password123")
 
         //when //then
-        val exception = assertThrows(NotFoundUserException::class.java) {
-            runBlocking { loginService.loginFailAction(loginUserRequest) }
+        val exception = assertThrows<NotFoundUserException> {
+            runTest { loginService.loginFailAction(loginUserRequest) }
         }
-        assertEquals("prefix123:suffix456", exception.message)
+        assertEquals("Not found user: prefix123:suffix456", exception.message)
     }
 
     @Test
-    fun `test create login user calls repository`() = runBlocking {
+    fun `test create login user calls repository`() = runTest {
         //given
         val loginModel = LoginModel(
-            "prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, OffsetDateTime.now(), null, UUID.randomUUID()
+            "prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID()
         )
         coEvery { loginRepository.create(loginModel) } returns loginModel
 
@@ -120,12 +119,12 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `test delete login user calls repository`() = runBlocking {
+    fun `test delete login user calls repository`() = runTest {
         //given
         val uuid = UUID.randomUUID()
         val loginModel = LoginModel(
             "prefix123", "suffix456", "encodedPassword",
-            LoginStatus.ACTIVE, OffsetDateTime.now(), null, uuid
+            LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, uuid
         )
 
         coEvery { loginRepository.read(uuid) } returns loginModel
@@ -140,18 +139,18 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `test delete login user throws exception when not found`() = runBlocking {
+    fun `test delete login user throws exception when not found`() = runTest {
         //given
         val uuid = UUID.randomUUID()
         val loginModel = LoginModel(
             "prefix123", "suffix456", "encodedPassword",
-            LoginStatus.ACTIVE, OffsetDateTime.now(), null, uuid
+            LoginStatus.ACTIVE, role = UserRole.USER,OffsetDateTime.now(), null, uuid
         )
         coEvery { loginRepository.read(uuid) } returns null
 
         //when //then
         val exception = assertThrows(NotFoundUserException::class.java) {
-            runBlocking { loginService.deleteLoginUser(loginModel) }
+            runTest { loginService.deleteLoginUser(loginModel) }
         }
         assertEquals("", exception.message)
         coVerify { loginRepository.read(uuid) }
@@ -166,6 +165,7 @@ class LoginServiceImplUnitTest {
             suffixId = "0u",
             password = "regione",
             status = LoginStatus.ACTIVE,
+            role = UserRole.USER,
             lastLoginAt = OffsetDateTime.now(),
             deletedAt = null,
             id = null
@@ -175,26 +175,26 @@ class LoginServiceImplUnitTest {
         //then
         val jwtModel = loginService.loginSuccessAction(loginModel)
 
+
     }
 
-
     @Test
-    fun `attemptAuthenticate if user return null then throw NotFoundUser test`() = runTest {
+    fun `attemptAuthenticate if user return null`() = runTest {
         //given
         val loginReq = LoginUserRequest(suffixId = "0u", prefixId = "dicam", password = "solet")
         coEvery {
             loginRepository.findUser(any(), any())
         } returns null
         //when
+        val attemptAuthenticate = loginService.attemptAuthenticate(loginReq)
         //then
-        assertThrows<NotFoundUserException> {
-            loginService.attemptAuthenticate(loginReq)
-        }
+        assertThat(attemptAuthenticate).isNull()
+
         coVerify(exactly = 1) { loginRepository.findUser(any(), any()) }
     }
 
     @Test
-    fun `attemptAuthentication test `() = runTest {
+    fun `when user found and password matched then return LoginModel`() = runTest {
         //given
         val loginReq = LoginUserRequest(suffixId = "0u", prefixId = "dicam", password = "solet")
         coEvery {
@@ -208,6 +208,7 @@ class LoginServiceImplUnitTest {
                 prefixId = "dicam",
                 password = "solet",
                 status = LoginStatus.ACTIVE,
+                role = UserRole.USER,
                 lastLoginAt = OffsetDateTime.now(),
                 deletedAt = null,
                 id = UUID.randomUUID()
@@ -224,7 +225,7 @@ class LoginServiceImplUnitTest {
     }
 
     @Test
-    fun `attemptAuthentication fail test`() = runTest {
+    fun `when matched password then return null`() = runTest {
         //given
         val loginReq = LoginUserRequest(suffixId = "0u", prefixId = "dicam", password = "solet")
         coEvery { bCryptPasswordEncoder.matches(any(), any()) } returns false
@@ -234,16 +235,16 @@ class LoginServiceImplUnitTest {
                 prefixId = "dicam",
                 password = "solet",
                 status = LoginStatus.ACTIVE,
+                role = UserRole.USER,
                 lastLoginAt = OffsetDateTime.now(),
                 deletedAt = null,
                 id = UUID.randomUUID()
             )
         }
         //when
+        val attemptAuthenticate = loginService.attemptAuthenticate(loginReq)
         //then
-        assertThrows<NotFoundUserException> {
-            loginService.attemptAuthenticate(loginReq)
-        }
+        assertThat(attemptAuthenticate).isNull()
         coVerify(exactly = 1) { loginRepository.findUser(any(), any()) }
         coVerify(exactly = 1) { bCryptPasswordEncoder.matches(any(), any()) }
     }

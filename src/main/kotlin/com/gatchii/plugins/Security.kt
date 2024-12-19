@@ -9,7 +9,6 @@ import io.ktor.server.response.respond
 import java.util.concurrent.TimeUnit
 
 fun Application.configureSecurity() {
-
     val jwtAudience = environment.config.property("jwt.audience").getString()
     val jwtRealm = environment.config.property("jwt.realm").getString()
     val jwtIssuer = environment.config.property("jwt.issuer").getString()
@@ -20,6 +19,7 @@ fun Application.configureSecurity() {
     val userId = "userUid"
     // Please read the jwt property from the config file if you are using EngineMain
     install(Authentication) {
+
         jwt("auth-jwt") {
             realm = jwtRealm
             verifier(jwkProvider, jwtIssuer) {

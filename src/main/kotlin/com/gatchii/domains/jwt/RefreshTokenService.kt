@@ -10,16 +10,13 @@ import com.auth0.jwt.algorithms.Algorithm
 
 interface RefreshTokenService {
 
-    suspend fun generateRefreshToken(
-                             claim: MutableMap<String, Any>,
-                             algorithm: Algorithm
-    ): String
+    suspend fun generate(claim: MutableMap<String, Any>): String
 
     //verify and refresh
-    suspend fun renewal(refreshToken: String, algorithm: Algorithm): String
+    suspend fun renewal(refreshToken: String): String
 
-    suspend fun registerRefreshToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
+    suspend fun registerToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 
-    suspend fun invalidateRefreshToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
+    suspend fun invalidateToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 
 }

@@ -1,6 +1,6 @@
 <configuration>
 	<property name="FILE_PATH" value="/Volumes/Workspaces/workspace/projects/Gatchii/app/gatchii-web-api/logs"/>
-	<property name="PATTERN" value="%d{YYYY-MM-dd HH:mm:ss.SSS}:[%X{call-id:-startup}][%.20thread] %-4level [%logger{5}.%method:%line]- %msg%n"/>
+	<property name="PATTERN" value="%d{YYYY-MM-dd HH:mm:ss.SSS}:[%X{call-id:-startup}][%.30thread] %-4level [%logger{5}.%method:%line]- %msg%n"/>
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>${PATTERN}</pattern>

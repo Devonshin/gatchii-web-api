@@ -9,6 +9,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -56,6 +57,7 @@ class RsaServiceImplTest {
         //then
         coVerify(exactly = 1) { mockRsaRepository.create(any()) }
         coVerify(exactly = 1) { RsaPairHandler.generateRsaDataPair() }
+        unmockkObject(RsaPairHandler.Companion)
     }
 
     @Test

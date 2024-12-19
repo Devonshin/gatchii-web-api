@@ -1,7 +1,9 @@
 package com.gatchii.plugins
 
+import com.gatchii.shared.exception.NotFoundUserException
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -13,13 +15,13 @@ import kotlinx.serialization.Serializable
 fun Application.configureStatusPages() {
     install(StatusPages) {
         val logger: Logger = KtorSimpleLogger("StatusPages")
-        logger.info("StatusPages installed")
-
         status(HttpStatusCode.NotFound) { status ->
+            logger.error("Not Found: ${status.value}: ${status.description}")
             call.respondText(text = "404: Page Not Found", status = status)
         }
 
         status(HttpStatusCode.Unauthorized) { status ->
+            logger.error("Unauthorized request: call.request.uri: ${call.request.uri}")
             call.respond(
                 HttpStatusCode.Unauthorized, ErrorResponse(
                     message = status.description,
@@ -29,13 +31,37 @@ fun Application.configureStatusPages() {
             )
         }
 
+        exception<NotFoundUserException> { call, cause ->
+            logger.error("exception<NotFoundUserException>: ", cause)
+            call.respond(
+                HttpStatusCode.NotFound, ErrorResponse(
+                    message = cause.message ?: "User not found",
+                    code = HttpStatusCode.NotFound.value,
+                    path = call.request.uri
+                )
+            )
+        }
+
+        exception<RequestValidationException> { call, cause ->
+            logger.error("exception<RequestValidationException>: ", cause)
+            call.respond(
+                HttpStatusCode.BadRequest, ErrorResponse(
+                    message = cause.reasons[0],
+                    code = HttpStatusCode.BadRequest.value,
+                    path = call.request.uri
+                )
+            )
+        }
+
         exception<Throwable> { call, cause ->
-            logger.error(cause)
-            call.respond(HttpStatusCode.InternalServerError, ErrorResponse(
-                message = HttpStatusCode.InternalServerError.description,
-                code = HttpStatusCode.InternalServerError.value,
-                path = call.request.uri
-            ))
+            logger.error("exception<Throwable>: ", cause)
+            call.respond(
+                HttpStatusCode.InternalServerError, ErrorResponse(
+                    message = HttpStatusCode.InternalServerError.description,
+                    code = HttpStatusCode.InternalServerError.value,
+                    path = call.request.uri
+                )
+            )
         }
     }
 }
@@ -47,4 +73,3 @@ data class ErrorResponse(
     val timestamp: Long = System.currentTimeMillis(),
     val path: String = ""
 )
- 

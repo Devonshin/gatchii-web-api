@@ -12,7 +12,7 @@ import kotlin.test.assertEquals
  */
 
 @UnitTest
-class JwkPairGeneratorUnitTest {
+class RsaPairGeneratorUnitTest {
 
     companion object {
         private lateinit var generateRsaPair: RsaKeyDataPair

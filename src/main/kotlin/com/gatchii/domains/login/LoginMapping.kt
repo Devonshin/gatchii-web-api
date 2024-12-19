@@ -19,6 +19,7 @@ object LoginTable : UUID7Table(name = "login_users") {
     val suffixId: Column<String> = varchar("suffix_id", length = 30)
     val password: Column<String> = varchar("password", length = 255)
     val status: Column<LoginStatus> = enumerationByName(name = "status", klass = LoginStatus::class, length = 10)
+    val role: Column<UserRole> = enumerationByName(name = "role", klass = UserRole::class, length = 10)
     val lastLoginAt: Column<OffsetDateTime> =
         timestampWithTimeZone(name = "last_login_at").clientDefault { OffsetDateTime.now() }
     val deletedAt: Column<OffsetDateTime?> =
@@ -27,7 +28,7 @@ object LoginTable : UUID7Table(name = "login_users") {
     init {
         index(
             columns = arrayOf(
-                prefixId
+                prefixId, suffixId
             ),
             indexType = "HASH",
             isUnique = true,
@@ -45,6 +46,8 @@ data class LoginModel(
     val password: String,
     @NotNull
     val status: LoginStatus,
+    @NotNull
+    val role: UserRole,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val lastLoginAt: OffsetDateTime,
     @Serializable(with = OffsetDateTimeSerializer::class)
@@ -64,9 +67,14 @@ data class LoginUserRequest(
 )
 
 enum class LoginStatus(val value: String) {
-
     ACTIVE("ACTIVE"),
     INACTIVE("INACTIVE"),
     DELETED("DELETED"),
+}
 
+enum class UserRole(val value: String) {
+    USER("USER"),
+    PROFESSIONAL("PRO"),
+    ADMIN("ADMIN"),
+    DELETED("DELETED"),
 }

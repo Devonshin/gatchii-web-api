@@ -6,4 +6,4 @@ package com.gatchii.shared.exception
  * Date: 23/09/2024
  */
 
-class NotFoundUserException(message: String?) : Throwable(message)
+class NotFoundUserException(message: String?) : Exception(message)

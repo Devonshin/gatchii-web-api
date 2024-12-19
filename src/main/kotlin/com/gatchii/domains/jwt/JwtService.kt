@@ -10,7 +10,6 @@ import com.auth0.jwt.interfaces.DecodedJWT
  */
 
 interface JwtService {
-    fun generate(claim: Map<String, Any>, kid: String, algorithm: Algorithm): String
-    fun convert(token: String): DecodedJWT?
-    fun verify(token: String, algorithm: Algorithm): Boolean
+    suspend fun generate(claim: Map<String, String>): String
+    suspend fun convert(token: String): DecodedJWT?
 }

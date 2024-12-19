@@ -1,9 +1,7 @@
 package com.gatchii.domains.login
 
-import com.gatchii.shared.common.Constants
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
 import com.gatchii.shared.repository.DatabaseFactoryForTest
-import shared.repository.dummyLoginQueryList
 import com.github.f4b6a3.uuid.UuidCreator
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,7 +13,9 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import shared.common.UnitTest
+import shared.repository.dummyLoginQueryList
 import java.time.OffsetDateTime
+import kotlin.test.BeforeTest
 
 /**
  * Package: com.gatchii.unit.domains.login
@@ -25,16 +25,16 @@ import java.time.OffsetDateTime
 @UnitTest
 class LoginRepositoryImplUnitTest {
 
+    private lateinit var loginRepository: LoginRepository
     companion object {
+
         private val databaseFactory: DatabaseFactoryForTest = DatabaseFactoryForTest()
-        private lateinit var loginRepository: LoginRepository
 
         @BeforeAll
         @JvmStatic
         fun init() {
             println("init..")
             databaseFactory.connect()
-            loginRepository = LoginRepositoryImpl(LoginTable)
             transaction {
                 addLogger(StdOutSqlLogger)
                 SchemaUtils.create(LoginTable)
@@ -50,6 +50,11 @@ class LoginRepositoryImplUnitTest {
         }
     }
 
+    @BeforeTest
+    fun setup() {
+        loginRepository = LoginRepositoryImpl(LoginTable)
+    }
+
     private val loginAt = OffsetDateTime.now()
     private val id = UuidCreator.getTimeOrderedEpoch()
     private val loginData = LoginModel(
@@ -58,6 +63,7 @@ class LoginRepositoryImplUnitTest {
         suffixId = "gmail.com",
         password = "laudem",
         status = LoginStatus.ACTIVE,
+        role = UserRole.USER,
         lastLoginAt = loginAt,
         deletedAt = null,
     )
@@ -65,14 +71,15 @@ class LoginRepositoryImplUnitTest {
     @Test
     fun `login findUser test`() = runTest {
         //given
-        val prefixId = "prefixId"
-        val suffixId = "gmail.com"
+        val prefixId = "loginId"
+        val suffixId = "laudem"
         //when
         val loginModel = loginRepository.findUser(prefixId, suffixId)
         //then
         assertThat(loginModel).isNotNull
         assertThat(loginModel?.prefixId).isEqualTo(prefixId)
-        assertThat(loginModel?.suffixId).isEqualTo(suffixId)
+        assertThat(loginModel?.status).isEqualTo(LoginStatus.ACTIVE)
+        assertThat(loginModel?.role).isEqualTo(UserRole.USER)
     }
 
     @Test
@@ -96,6 +103,7 @@ class LoginRepositoryImplUnitTest {
             suffixId = "gmail.com",
             password = "laudem",
             status = LoginStatus.ACTIVE,
+            role = UserRole.USER,
             lastLoginAt = lastLoginAt,
             deletedAt = null,
         )
@@ -109,16 +117,17 @@ class LoginRepositoryImplUnitTest {
     @Test
     fun `login delete test`() = runTest {
         //given
-        val deleteId = UuidCreator.fromString("01922d5e-9721-77f0-8093-55f799339493")
+        val deleteId = UuidCreator.fromString("01922d5e-9721-77f0-8093-55f799339495")
         //when
         loginRepository.delete(deleteId)
         //then
         val read = loginRepository.read(deleteId)
         assertThat(read?.deletedAt).isNotNull
-        assertThat(read?.prefixId).isEqualTo("loginId")
+        assertThat(read?.prefixId).isEqualTo("testI2")
         assertThat(read?.suffixId).isEqualTo(EMPTY_STR)
         assertThat(read?.password).isEqualTo(EMPTY_STR)
         assertThat(read?.status).isEqualTo(LoginStatus.DELETED)
+        assertThat(read?.role).isEqualTo(UserRole.DELETED)
     }
 
     @Test
