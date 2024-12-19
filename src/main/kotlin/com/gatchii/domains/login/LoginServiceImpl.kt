@@ -4,6 +4,7 @@ import com.gatchii.domains.jwt.*
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
+import io.ktor.util.logging.*
 
 /** Package: com.gatchii.domains.login Created: Devonshin Date: 23/09/2024 */
 
@@ -14,16 +15,23 @@ class LoginServiceImpl(
     private val refreshTockenService: RefreshTokenService,
 ) : LoginService {
 
+    val logger: Logger = KtorSimpleLogger("com.gatchii.domains.LoginService")
+
     /**
-     * Handles the login process by attempting authentication and performing actions based on the outcome.
-     * If authentication is successful, it generates JWT tokens for the user. Otherwise, it handles the failure scenario.
+     * Handles the login process by attempting authentication and performing
+     * actions based on the outcome. If authentication is successful, it
+     * generates JWT tokens for the user. Otherwise, it handles the failure
+     * scenario.
      *
-     * @param loginUserRequest The login request containing user credentials, including prefixId, suffixId, and password.
-     * @return JwtModel containing access and refresh tokens if login is successful, or null if the credentials are invalid.
+     * @param loginUserRequest The login request containing user credentials,
+     *    including prefixId, suffixId, and password.
+     * @return JwtModel containing access and refresh tokens if login is
+     *    successful, or null if the credentials are invalid.
      */
     override suspend fun loginProcess(loginUserRequest: LoginUserRequest): JwtModel? {
-        val loginModel =
-            attemptAuthenticate(loginUserRequest) ?: return loginFailAction(loginUserRequest).let { null }
+        val loginModel = attemptAuthenticate(loginUserRequest)
+            ?: return loginFailAction(loginUserRequest).let { null }
+        logger.info("Login successful for user: $loginModel")
         return loginSuccessAction(loginModel)
     }
 
@@ -56,36 +64,30 @@ class LoginServiceImpl(
         //todo 로그인 아이디로 유저 조회
         //jwkProvider
 
-        val claim = mapOf(
+        val claim: Map<String, String> = mapOf(
             "userId" to loginModel.prefixId,
             "suffixIdx" to loginModel.suffixId,
-            "role" to "user"
+            "role" to loginModel.role.name,
         )
 
         val expiresIn = System.currentTimeMillis() + (1000L * 60 * 30)
 
-        //return JwtModel(
-        //    accessToken = AccessToken(
-        //        token = jwtService.generate(claim, jwk.keyId, ecdsA256),
-        //        expiresIn = expiresIn,
-        //    ),
-        //    refreshToken = RefreshToken(
-        //        token = refreshTockenService.generateRefreshToken(mutableMapOf(), algorithm = ecdsA256),
-        //        expiresIn = expiresIn * 4,
-        //    ),
-        //)
         return JwtModel(
-            AccessToken("", 1000L),
-            RefreshToken(
-                "",
-                1000L * 60 * 60 * 24 * 30
-            )
+            accessToken = AccessToken(
+                token = jwtService.generate(claim),
+                expiresIn = expiresIn,
+            ),
+            refreshToken = RefreshToken(
+                token = refreshTockenService.generate(mutableMapOf()),
+                expiresIn = expiresIn * 4,
+            ),
         )
     }
 
     /** Handles actions to be performed on login failure. */
     override suspend fun loginFailAction(loginUserRequest: LoginUserRequest) {
-        throw NotFoundUserException("${loginUserRequest.prefixId}:${loginUserRequest.suffixId}")
+        logger.error("Login failed for user: ${loginUserRequest.prefixId}:${loginUserRequest.suffixId}")
+        throw NotFoundUserException("Not found user: ${loginUserRequest.prefixId}:${loginUserRequest.suffixId}")
     }
 
     /**

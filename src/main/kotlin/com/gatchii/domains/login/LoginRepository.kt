@@ -5,6 +5,7 @@ import com.gatchii.domains.login.LoginTable.id
 import com.gatchii.domains.login.LoginTable.lastLoginAt
 import com.gatchii.domains.login.LoginTable.prefixId
 import com.gatchii.domains.login.LoginTable.password
+import com.gatchii.domains.login.LoginTable.role
 import com.gatchii.domains.login.LoginTable.status
 import com.gatchii.domains.login.LoginTable.suffixId
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
@@ -44,6 +45,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
             //it[prefixId] = EMPTY_STR
             it[suffixId] = EMPTY_STR
             it[password] = EMPTY_STR
+            it[role] = UserRole.DELETED
             it[status] = LoginStatus.DELETED
         }
         return@dbQuery
@@ -57,6 +59,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
             suffixId = row[suffixId],
             lastLoginAt = row[lastLoginAt],
             status = row[status],
+            role = row[role],
             deletedAt = row[deletedAt]
         )
     }
@@ -66,6 +69,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
         //it[suffixId] = domain.suffixId
         it[password] = domain.password
         it[status] = domain.status
+        it[role] = domain.role
         it[lastLoginAt] = domain.lastLoginAt
         it[deletedAt] = domain.deletedAt
     }
@@ -76,6 +80,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
         it[password] = domain.password
         it[suffixId] = domain.suffixId
         it[status] = domain.status
+        it[role] = domain.role
         it[lastLoginAt] = domain.lastLoginAt
         it[deletedAt] = domain.deletedAt
     }

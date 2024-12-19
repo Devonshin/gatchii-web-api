@@ -1,33 +1,54 @@
 package com.gatchii.plugins
 
-import com.gatchii.domains.jwt.RefreshTokenTable
-import com.gatchii.domains.jwt.JwtServiceImpl
-import com.gatchii.domains.jwt.RefreshTokenRepositoryImpl
-import com.gatchii.domains.jwt.RefreshTokenServiceImpl
-import com.gatchii.domains.login.LoginServiceImpl
+import com.auth0.jwk.JwkProvider
+import com.auth0.jwk.JwkProviderBuilder
+import com.gatchii.domains.jwk.*
+import com.gatchii.domains.jwt.*
+import com.gatchii.domains.login.*
 import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.utils.JwtHandler
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import java.util.concurrent.TimeUnit
 
 fun Application.configureFrameworks() {
 
     val appModule = module {
 
-        single { BCryptPasswordEncoder() }
+        single<BCryptPasswordEncoder> { BCryptPasswordEncoder() }
+        val config = environment.config.config("jwt")
+        val jwtConfig = JwtHandler.JwtConfig(
+            audience = config.property("audience").getString(),
+            issuer = config.property("issuer").getString(),
+            expireSec = config.property("expireSec").toString().toLong()
+        )
+        single<JwkProvider> {
+            JwkProviderBuilder(config.property("issuer").getString())
+                .cached(10, 24, TimeUnit.HOURS)
+                .rateLimited(10, 1, TimeUnit.MINUTES)
+                .build()
+        }
 
         /*repositories*/
-        single { RefreshTokenRepositoryImpl(RefreshTokenTable) }
+        single<JwkRepository> { JwkRepositoryImpl(JwkTable) }
+        single<LoginRepository> { LoginRepositoryImpl(LoginTable) }
+        single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(RefreshTokenTable) }
 
         /*services*/
-        single {
-            JwtServiceImpl(
-                jwtConfig = environment.config.config("jwt"),
-            )
+        single<JwkService> {
+            JwkServiceImpl(get())
         }
-        single { RefreshTokenServiceImpl(environment.config.config("rfrst"), get()) }
-        single { LoginServiceImpl(get(), get(), get(), get()) }
+        single<JwtService> {
+            JwtServiceImpl(jwtConfig, get())
+        }
+        single<RefreshTokenService> {
+            RefreshTokenServiceImpl(jwtConfig, get(), get())
+        }
+        single<LoginService> {
+            LoginServiceImpl(get(), get(), get(), get())
+        }
 
     }
 

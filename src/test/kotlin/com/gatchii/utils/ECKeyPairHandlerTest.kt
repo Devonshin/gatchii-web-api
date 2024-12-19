@@ -1,7 +1,12 @@
 package com.gatchii.utils
 
+import com.auth0.jwt.algorithms.Algorithm
+import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
+import com.gatchii.utils.ECKeyPairHandler.Companion.generatePublicKeyFromPrivateKey
+import com.gatchii.utils.JwtHandler.Companion.verify
 import io.ktor.util.*
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -9,6 +14,8 @@ import shared.common.UnitTest
 import java.security.KeyPair
 import java.security.PrivateKey
 import java.security.Security
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
 
 /**
  * Package: com.gatchii.unit.utils
@@ -63,7 +70,7 @@ class ECKeyPairHandlerTest {
         val privateKeyPem = keyPair.private.encoded.encodeBase64()
 
         // when
-        val privateKey: PrivateKey = ECKeyPairHandler.convertPrivateKey(privateKeyPem)
+        val privateKey: PrivateKey = convertPrivateKey(privateKeyPem)
 
         //then
         Assertions.assertThat(privateKey)
@@ -77,8 +84,20 @@ class ECKeyPairHandlerTest {
         val invalidPemString = "This is an invalid PEM format"
         // when - then
         assertThrows(IllegalArgumentException::class.java) {
-            ECKeyPairHandler.convertPrivateKey(invalidPemString)
+            convertPrivateKey(invalidPemString)
         }
     }
 
+    @Test
+    fun `test if publicKey from privateKey`() {
+        //given
+        //val expiredToken = "eyJraWQiOiI4OTMyMDRiNy1lZjg4LTQ2MDAtOWViZi1iMDhlZTVkMjA4ZTYiLCJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJUZXN0QXVkaWVuY2UiLCJpc3MiOiJUZXN0SXNzdWVyIiwiY2xhaW0iOnsidXNlcm5hbWUiOiJ0ZXN0VXNlciIsInVzZXJJZCI6InRlc3RVc2VySWQiLCJyb2xlIjoidXNlciJ9LCJleHAiOjE3MzU2NDM2MzksImp0aSI6IjEyMzQifQ.Ymkr9R_U-qopbXZXJNGKd98hMO6w6Q0rxRIXPJi2-MTUk1ej8cC_ujX9jchMQhj675LaGQkj_cqHm9YzNfZPkg"
+        val privateKey = convertPrivateKey("MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCDQ+B6qEzr/M2sql4X+09X9YlYt8BKAHX8Q7/6s4KC3qQ==")
+        //when
+        val publicKey = generatePublicKeyFromPrivateKey(privateKey)
+        //val ecdsA256 = Algorithm.ECDSA256(publicKey as ECPublicKey?, privateKey as ECPrivateKey?)
+        //val verify = verify(expiredToken, ecdsA256)
+        //then
+        assertThat(publicKey).isNotNull
+    }
 }

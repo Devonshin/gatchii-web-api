@@ -20,6 +20,7 @@ fun Route.mainRoute() {
     val logger: Logger = KtorSimpleLogger("com.gatchii.domains.main.MainRoute")
 
     get(Regex("/?")) {
+        logger.info("Main")
         call.respond("Hello World! This is main page")
     }
 

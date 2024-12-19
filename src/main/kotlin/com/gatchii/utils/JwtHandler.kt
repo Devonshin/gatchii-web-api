@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
+import io.ktor.util.logging.KtorSimpleLogger
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -15,10 +16,13 @@ import java.util.*
  */
 
 class JwtHandler {
+
     companion object {
+        private val logger = KtorSimpleLogger("com.gatchii.utils.JwtHandler")
         private const val JWT_CLAIM_NAME = "claim"
+        private const val TOKEN_REFRESH_THRESHOLD_MINUTES = 30L
         fun generate(
-            kid: String,
+            jwtId: String? = UUID.randomUUID().toString(),
             claim: Map<String, Any>,
             algorithm: Algorithm,
             jwtConfig: JwtConfig
@@ -27,16 +31,15 @@ class JwtHandler {
             val sign = JWT.create()
                 .withAudience(jwtConfig.audience)
                 .withIssuer(jwtConfig.issuer)
-                .withKeyId(kid)
                 .withIssuedAt(now.toInstant())
                 .withClaim(JWT_CLAIM_NAME, claim)
-                .withJWTId(claim.getOrDefault("id", UUID.randomUUID().toString()) as String)
+                .withJWTId(jwtId)
                 .withExpiresAt(now.plusSeconds(jwtConfig.expireSec.toLong()).toInstant())
                 .sign(algorithm)
             return sign
         }
 
-        fun convert(token: String): DecodedJWT? {
+        fun convert(token: String): DecodedJWT {
             return JWT.decode(token)
         }
 
@@ -44,17 +47,25 @@ class JwtHandler {
             return decodedJWT.getClaim("claim")?.asMap()?: error("claim is null")
         }
 
-        fun verify(token: String, algorithm: Algorithm, issuer: String, audience: String): Boolean {
+        fun verify(token: String, algorithm: Algorithm): Boolean {
             return try {
+                val convert = convert(token)
+                val expiresAt = convert.expiresAt
+                val now = OffsetDateTime.now()
+                if (expiresAt.toInstant().isAfter(now.plusMinutes(TOKEN_REFRESH_THRESHOLD_MINUTES).toInstant())) { // if remain more than 30 minutes
+                    logger.error("Too early request refresh token : expiresAt: $expiresAt, now: $now")
+                    throw JWTVerificationException("Too early request refresh token")
+                }
                 val verifier: JWTVerifier = JWT.require(algorithm)
-                    .withAudience(audience)
-                    .withIssuer(issuer)
+                    .withAudience(convert.audience[0])
+                    .withIssuer(convert.issuer)
+                    .withJWTId(convert.id)
                     .build()
                 verifier.verify(token)
                 true
             } catch (e: JWTVerificationException) {
-                println("Invalid JWT signature: ${e.message}")
-                false
+                println("Invalid JWT: ${e.message}")
+                throw e
             }
         }
     }
@@ -62,6 +73,6 @@ class JwtHandler {
     data class JwtConfig (
         val audience: String,
         val issuer: String,
-        val expireSec: Int = 3600,
+        val expireSec: Long = 3600,
     )
 }
