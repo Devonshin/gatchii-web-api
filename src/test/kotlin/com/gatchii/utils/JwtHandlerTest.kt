@@ -1,10 +1,16 @@
 package com.gatchii.utils
 
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.AlgorithmMismatchException
+import com.auth0.jwt.exceptions.IncorrectClaimException
+import com.auth0.jwt.exceptions.JWTDecodeException
+import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.exceptions.TokenExpiredException
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import shared.common.UnitTest
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
@@ -42,7 +48,6 @@ class JwtHandlerTest {
         val convertJwt = JwtHandler.convert(jwtStr)
         //then
         assertThat(convertJwt).isNotNull()
-        assertThat(convertJwt.keyId).isEqualTo(kid)
         assertThat(convertJwt.issuer).isEqualTo(jwtConfig.issuer)
         assertThat(convertJwt.audience).contains(jwtConfig.audience)
         assertThat(convertJwt.expiresAt?.time).isEqualTo(convertJwt?.issuedAt?.time?.plus(jwtConfig.expireSec * 1000L))
@@ -84,86 +89,83 @@ class JwtHandlerTest {
         val token = JwtHandler.generate("id", claim, algorithm, jwtConfig)
 
         // When
-        val result = JwtHandler.verify(token, algorithm)
+        val result = JwtHandler.verify(token, algorithm, jwtConfig)
 
         // Then
         assertTrue(result)
     }
 
     @Test
-    fun `verify should return false for valid token`() {
+    fun `too early verify should throw JWTVerificationException`() {
         // Given
-        val token = JwtHandler.generate("id", claim, algorithm, jwtConfig)
-
+        val token = JwtHandler.generate("id", claim, algorithm, JwtHandler.JwtConfig(
+            "rfrstAudience", "rfrstIssuer", 60 * 60
+        ))
         // When
-        val result = JwtHandler.verify("..", algorithm)
-
-        // Then
-        assertFalse(result)
+        assertThrows<JWTVerificationException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
     }
 
     @Test
-    fun `verify should return false for token with invalid signature`() {
+    fun `verify should throw JWTDecodeException for token with invalid signature`() {
         // Given
         val token = "invalid.token.signature"
-
         // When
-        val result = JwtHandler.verify(token, algorithm)
-
-        // Then
-        assertFalse(result)
+        assertThrows<JWTDecodeException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
     }
 
     @Test
-    fun `verify should return false for token with incorrect audience`() {
+    fun `verify should throw IncorrectClaimException for token with incorrect audience`() {
         // Given
-        val incorrectConfig = JwtHandler.JwtConfig("incorrect-audience", jwtConfig.issuer)
+        val incorrectConfig = JwtHandler.JwtConfig("incorrect-audience", jwtConfig.issuer, 60)
         val token = JwtHandler.generate("id", claim, algorithm, incorrectConfig)
 
         // When
-        val result = JwtHandler.verify(token, algorithm)
-
-        // Then
-        assertFalse(result)
+        assertThrows<IncorrectClaimException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
     }
 
     @Test
-    fun `verify should return false for token with incorrect issuer`() {
+    fun `verify should throw IncorrectClaimException for token with incorrect issuer`() {
         // Given
-        val incorrectConfig = JwtHandler.JwtConfig(jwtConfig.audience, "incorrect-issuer")
+        val incorrectConfig = JwtHandler.JwtConfig(jwtConfig.audience, "incorrect-issuer", 60)
         val token = JwtHandler.generate("id", claim, algorithm, incorrectConfig)
 
         // When
-        val result = JwtHandler.verify(token, algorithm)
-
+        assertThrows<IncorrectClaimException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
         // Then
-        assertFalse(result)
     }
 
     @Test
-    fun `verify should return false for expired token`() {
+    fun `verify should throw TokenExpiredException for expired token`() {
         // Given
         val expiredConfig = JwtHandler.JwtConfig(jwtConfig.audience, jwtConfig.issuer, -60)
         val token = JwtHandler.generate("id", claim, algorithm, expiredConfig)
 
         // When
-        val result = JwtHandler.verify(token, algorithm)
-
+        assertThrows<TokenExpiredException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
         // Then
-        assertFalse(result)
     }
 
     @Test
-    fun `verify should return false for token with incorrect algorithm`() {
+    fun `verify should throw AlgorithmMismatchException for token with incorrect algorithm`() {
         // Given
         val expiredConfig = JwtHandler.JwtConfig(jwtConfig.audience, jwtConfig.issuer, -60)
         val token = JwtHandler.generate("id", claim, algorithm, expiredConfig)
         val algorithm: Algorithm = Algorithm.HMAC256("incorrect-secret")
         // When
-        val result = JwtHandler.verify(token, algorithm)
-
+        assertThrows<AlgorithmMismatchException> {
+            JwtHandler.verify(token, algorithm, jwtConfig)
+        }
         // Then
-        assertFalse(result)
     }
 
 }

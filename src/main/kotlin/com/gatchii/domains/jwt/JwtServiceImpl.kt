@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.gatchii.domains.jwk.JwkService
 import com.gatchii.utils.JwtHandler
+import com.gatchii.utils.JwtHandler.JwtConfig
 
 /**
  * A service implementation that handles JWT generation, decoding, and claims extraction.
@@ -16,11 +17,10 @@ import com.gatchii.utils.JwtHandler
  */
 
 class JwtServiceImpl(
-    private val jwtConfig: JwtHandler.JwtConfig,
+    private val jwtConfig: JwtConfig,
     private val jwkService: JwkService,
 ) : JwtService {
 
-    
     /**
      * Generates a signed JWT token using the provided claims.
      *
@@ -53,5 +53,7 @@ class JwtServiceImpl(
     fun getClaim(decodedJWT: DecodedJWT): MutableMap<String, Any> {
         return decodedJWT.getClaim("claim")?.asMap() ?: error("claim is null")
     }
+
+    override suspend fun config(): JwtConfig = jwtConfig
 
 }

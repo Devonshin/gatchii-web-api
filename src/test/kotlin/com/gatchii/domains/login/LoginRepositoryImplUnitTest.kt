@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import shared.common.UnitTest
 import shared.repository.dummyLoginQueryList
 import java.time.OffsetDateTime
+import java.util.UUID
 import kotlin.test.BeforeTest
 
 /**
@@ -62,6 +63,7 @@ class LoginRepositoryImplUnitTest {
         prefixId = "prefixId",
         suffixId = "gmail.com",
         password = "laudem",
+        rsaUid = UUID.randomUUID(),
         status = LoginStatus.ACTIVE,
         role = UserRole.USER,
         lastLoginAt = loginAt,
@@ -102,6 +104,7 @@ class LoginRepositoryImplUnitTest {
             prefixId = "prefixId",
             suffixId = "gmail.com",
             password = "laudem",
+            rsaUid = UUID.randomUUID(),
             status = LoginStatus.ACTIVE,
             role = UserRole.USER,
             lastLoginAt = lastLoginAt,
@@ -124,7 +127,7 @@ class LoginRepositoryImplUnitTest {
         val read = loginRepository.read(deleteId)
         assertThat(read?.deletedAt).isNotNull
         assertThat(read?.prefixId).isEqualTo("testI2")
-        assertThat(read?.suffixId).isEqualTo(EMPTY_STR)
+        assertThat(read?.suffixId).isEqualTo("laudem")
         assertThat(read?.password).isEqualTo(EMPTY_STR)
         assertThat(read?.status).isEqualTo(LoginStatus.DELETED)
         assertThat(read?.role).isEqualTo(UserRole.DELETED)

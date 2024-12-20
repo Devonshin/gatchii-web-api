@@ -1,10 +1,12 @@
 package com.gatchii.domains.login
 
 import com.gatchii.domains.jwt.*
+import com.gatchii.domains.rsa.RsaService
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
 import io.ktor.util.logging.*
+import java.time.OffsetDateTime
 
 /** Package: com.gatchii.domains.login Created: Devonshin Date: 23/09/2024 */
 
@@ -13,6 +15,7 @@ class LoginServiceImpl(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val jwtService: JwtService,
     private val refreshTockenService: RefreshTokenService,
+    private val rsaService: RsaService,
 ) : LoginService {
 
     val logger: Logger = KtorSimpleLogger("com.gatchii.domains.LoginService")
@@ -52,7 +55,6 @@ class LoginServiceImpl(
         return null
     }
 
-
     /**
      * Executes actions on successful login and generates JWT tokens for the
      * user.
@@ -61,25 +63,26 @@ class LoginServiceImpl(
      * @return JwtModel containing access and refresh tokens.
      */
     override suspend fun loginSuccessAction(loginModel: LoginModel): JwtModel {
-        //todo 로그인 아이디로 유저 조회
-        //jwkProvider
-
+        val rsa = rsaService.getRsa(loginModel.rsaUid)
         val claim: Map<String, String> = mapOf(
-            "userId" to loginModel.prefixId,
-            "suffixIdx" to loginModel.suffixId,
+            "userUid" to rsaService.encrypt(rsa, loginModel.id.toString()),
+            "userId" to rsaService.encrypt(rsa, loginModel.prefixId.toString()),
             "role" to loginModel.role.name,
         )
-
-        val expiresIn = System.currentTimeMillis() + (1000L * 60 * 30)
-
+        val refreshClaim: Map<String, String> = mapOf(
+            "userUid" to rsaService.encrypt(rsa, loginModel.id.toString())
+        )
+        val jwtConfig = jwtService.config()
+        val refreshJwtConfig = refreshTockenService.config()
+        val now = OffsetDateTime.now()
         return JwtModel(
             accessToken = AccessToken(
                 token = jwtService.generate(claim),
-                expiresIn = expiresIn,
+                expiresIn = now.plusSeconds(jwtConfig.expireSec).toEpochSecond(),
             ),
             refreshToken = RefreshToken(
-                token = refreshTockenService.generate(mutableMapOf()),
-                expiresIn = expiresIn * 4,
+                token = refreshTockenService.generate(refreshClaim),
+                expiresIn = now.plusSeconds(refreshJwtConfig.expireSec).toEpochSecond(),
             ),
         )
     }

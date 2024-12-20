@@ -1,14 +1,18 @@
 package com.gatchii.domains.login
 
-import com.gatchii.domains.jwt.JwtModel
 import com.gatchii.domains.jwt.JwtService
 import com.gatchii.domains.jwt.RefreshTokenService
+import com.gatchii.domains.rsa.RsaModel
+import com.gatchii.domains.rsa.RsaService
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.utils.JwtHandler
+import com.gatchii.utils.RsaPairHandler
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -26,7 +30,25 @@ class LoginServiceImplUnitTest {
     private lateinit var jwtService: JwtService
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
     private lateinit var refreshTockenService: RefreshTokenService
-    private val loginModelStub = LoginModel("prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID())
+    private lateinit var rsaService: RsaService
+    private val jwtConfig = JwtHandler.JwtConfig(
+        audience = "", issuer = "", expireSec = 10
+    )
+    private val refreshJwtConfig = JwtHandler.JwtConfig(
+        audience = "", issuer = "", expireSec = 10
+    )
+    private val loginModelStub =
+        LoginModel(
+            "prefix123",
+            "suffix456",
+            "encodedPassword",
+            UUID.randomUUID(),
+            LoginStatus.ACTIVE,
+            role = UserRole.USER,
+            OffsetDateTime.now(),
+            null,
+            UUID.randomUUID()
+        )
 
     @BeforeEach
     fun setUp() {
@@ -34,7 +56,8 @@ class LoginServiceImplUnitTest {
         jwtService = mockk<JwtService>()
         bCryptPasswordEncoder = mockk<BCryptPasswordEncoder>()
         refreshTockenService = mockk<RefreshTokenService>()
-        loginService = LoginServiceImpl(loginRepository, bCryptPasswordEncoder, jwtService, refreshTockenService)
+        rsaService = mockk<RsaService>()
+        loginService = LoginServiceImpl(loginRepository, bCryptPasswordEncoder, jwtService, refreshTockenService, rsaService)
     }
 
     @Test
@@ -42,21 +65,37 @@ class LoginServiceImplUnitTest {
         //given
         val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "password123")
 
-        val mockJwtModel = JwtModel(mockk(), mockk())
-
         coEvery { loginRepository.findUser("prefix123", "suffix456") } returns loginModelStub
         coEvery { bCryptPasswordEncoder.matches("password123", "encodedPassword") } returns true
         coEvery { jwtService.generate(any()) } returns "jwtToken"
-
+        coEvery { jwtService.config() } returns jwtConfig
+        coEvery { refreshTockenService.config() } returns refreshJwtConfig
+        coEvery { refreshTockenService.generate(any()) } returns "refreshJwtToken"
+        coEvery { rsaService.getRsa(any()) } returns RsaModel(
+            publicKey = "",
+            privateKey = "",
+            exponent = "",
+            modulus = "",
+            createdAt = OffsetDateTime.now(),
+            id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+        )
+        coEvery { rsaService.encrypt(any(), any()) } returns "encrypted"
         //when
         val result = loginService.loginProcess(loginUserRequest)
 
         //then
         assertNotNull(result)
-        assertEquals(mockJwtModel, result)
+        assertThat(result?.accessToken?.token).isEqualTo("jwtToken")
+        assertThat(result?.refreshToken?.token).isEqualTo("refreshJwtToken")
+
         coVerify { loginRepository.findUser("prefix123", "suffix456") }
         coVerify { bCryptPasswordEncoder.matches("password123", "encodedPassword") }
         coVerify(exactly = 1) { jwtService.generate(any()) }
+        coVerify(exactly = 1) { jwtService.config() }
+        coVerify(exactly = 1) { refreshTockenService.generate(any()) }
+        coVerify(exactly = 1) { refreshTockenService.config() }
+        coVerify(exactly = 1) { rsaService.getRsa(any()) }
+        coVerify(exactly = 3) { rsaService.encrypt(any(), any()) }
     }
 
     @Test
@@ -97,7 +136,7 @@ class LoginServiceImplUnitTest {
 
         //when //then
         val exception = assertThrows<NotFoundUserException> {
-            runTest { loginService.loginFailAction(loginUserRequest) }
+            loginService.loginFailAction(loginUserRequest)
         }
         assertEquals("Not found user: prefix123:suffix456", exception.message)
     }
@@ -106,7 +145,7 @@ class LoginServiceImplUnitTest {
     fun `test create login user calls repository`() = runTest {
         //given
         val loginModel = LoginModel(
-            "prefix123", "suffix456", "encodedPassword", LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID()
+            "prefix123", "suffix456", "encodedPassword",  UUID.randomUUID(),LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID()
         )
         coEvery { loginRepository.create(loginModel) } returns loginModel
 
@@ -123,7 +162,7 @@ class LoginServiceImplUnitTest {
         //given
         val uuid = UUID.randomUUID()
         val loginModel = LoginModel(
-            "prefix123", "suffix456", "encodedPassword",
+            "prefix123", "suffix456", "encodedPassword", UUID.randomUUID(),
             LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, uuid
         )
 
@@ -143,14 +182,14 @@ class LoginServiceImplUnitTest {
         //given
         val uuid = UUID.randomUUID()
         val loginModel = LoginModel(
-            "prefix123", "suffix456", "encodedPassword",
-            LoginStatus.ACTIVE, role = UserRole.USER,OffsetDateTime.now(), null, uuid
+            "prefix123", "suffix456", "encodedPassword", UUID.randomUUID(),
+            LoginStatus.ACTIVE, role = UserRole.USER, OffsetDateTime.now(), null, uuid
         )
         coEvery { loginRepository.read(uuid) } returns null
 
         //when //then
-        val exception = assertThrows(NotFoundUserException::class.java) {
-            runTest { loginService.deleteLoginUser(loginModel) }
+        val exception = assertThrows<NotFoundUserException> {
+            loginService.deleteLoginUser(loginModel)
         }
         assertEquals("", exception.message)
         coVerify { loginRepository.read(uuid) }
@@ -164,17 +203,45 @@ class LoginServiceImplUnitTest {
             prefixId = "oporteat",
             suffixId = "0u",
             password = "regione",
+            rsaUid = UUID.randomUUID(),
             status = LoginStatus.ACTIVE,
             role = UserRole.USER,
             lastLoginAt = OffsetDateTime.now(),
             deletedAt = null,
             id = null
         )
+        val rsaKeyPair = RsaPairHandler.generateRsaDataPair()
+        val privateKey = rsaKeyPair.privateKey
+        val publicKey = rsaKeyPair.publicKey
+        coEvery { jwtService.generate(any()) } returns "jwtToken"
+        coEvery { jwtService.config() } returns jwtConfig
+        coEvery { refreshTockenService.config() } returns refreshJwtConfig
+        coEvery { rsaService.encrypt(any(), any()) } returns "jwtToken"
+        coEvery { rsaService.getRsa(any()) } returns RsaModel(
+            publicKey = publicKey.publicKey,
+            privateKey = privateKey.privateKey,
+            exponent = publicKey.e,
+            modulus = publicKey.n,
+            createdAt = OffsetDateTime.now(),
+            id = loginModel.rsaUid,
+        )
+        coEvery { refreshTockenService.generate(any()) } returns "refreshjwtToken"
 
         //when
-        //then
         val jwtModel = loginService.loginSuccessAction(loginModel)
+        //then
+        assertThat(jwtModel).isNotNull
+        assertThat(jwtModel.accessToken.token).isEqualTo("jwtToken")
+        assertThat(jwtModel.accessToken.expiresIn).isEqualTo("jwtToken")
+        assertThat(jwtModel.refreshToken.token).isEqualTo("refreshjwtToken")
+        assertThat(jwtModel.refreshToken.expiresIn).isEqualTo("refreshjwtToken")
 
+        coVerify(exactly = 1) { jwtService.generate(any()) }
+        coVerify(exactly = 1) { refreshTockenService.generate(any()) }
+        coVerify(exactly = 1) { jwtService.config() }
+        coVerify(exactly = 1) { refreshTockenService.config() }
+        coVerify(exactly = 3) { rsaService.encrypt(any(), any()) }
+        coVerify(exactly = 1) { rsaService.getRsa(any()) }
 
     }
 
@@ -207,6 +274,7 @@ class LoginServiceImplUnitTest {
                 suffixId = "0u",
                 prefixId = "dicam",
                 password = "solet",
+                rsaUid = UUID.randomUUID(),
                 status = LoginStatus.ACTIVE,
                 role = UserRole.USER,
                 lastLoginAt = OffsetDateTime.now(),
@@ -234,6 +302,7 @@ class LoginServiceImplUnitTest {
                 suffixId = "0u",
                 prefixId = "dicam",
                 password = "solet",
+                rsaUid = UUID.randomUUID(),
                 status = LoginStatus.ACTIVE,
                 role = UserRole.USER,
                 lastLoginAt = OffsetDateTime.now(),

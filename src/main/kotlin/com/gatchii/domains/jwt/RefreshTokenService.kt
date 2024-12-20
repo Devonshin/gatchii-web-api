@@ -1,6 +1,6 @@
 package com.gatchii.domains.jwt
 
-import com.auth0.jwt.algorithms.Algorithm
+import com.gatchii.utils.JwtHandler.JwtConfig
 
 /**
  * Package: com.gatchii.domains.jwt
@@ -10,7 +10,7 @@ import com.auth0.jwt.algorithms.Algorithm
 
 interface RefreshTokenService {
 
-    suspend fun generate(claim: MutableMap<String, Any>): String
+    suspend fun generate(claim: Map<String, String>): String
 
     //verify and refresh
     suspend fun renewal(refreshToken: String): String
@@ -18,5 +18,7 @@ interface RefreshTokenService {
     suspend fun registerToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 
     suspend fun invalidateToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
+
+    suspend fun config(): JwtConfig
 
 }

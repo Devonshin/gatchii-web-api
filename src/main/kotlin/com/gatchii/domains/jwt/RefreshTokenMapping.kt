@@ -18,13 +18,13 @@ object RefreshTokenTable : UUID7Table(
     name = "jwt_refresh_tokens",
 ) {
     val isValid = bool("is_valid")
-    val userId = uuid("user_id")
+    val userUid = uuid("user_uid")
     val expireAt = timestampWithTimeZone("expire_at")
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
     init {
         index(
             columns = arrayOf(
-                userId
+                userUid
             ),
             indexType = "HASH",
             isUnique = false,
@@ -34,7 +34,7 @@ object RefreshTokenTable : UUID7Table(
 
 data class RefreshTokenModel(
     val isValid: Boolean,
-    val userId: UUID,
+    val userUid: UUID,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val expireAt: OffsetDateTime? = null,
     @Serializable(with = OffsetDateTimeSerializer::class)

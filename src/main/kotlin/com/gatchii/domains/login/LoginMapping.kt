@@ -16,8 +16,9 @@ import java.util.*
 
 object LoginTable : UUID7Table(name = "login_users") {
     val prefixId: Column<String> = varchar("prefix_id", length = 50)
-    val suffixId: Column<String> = varchar("suffix_id", length = 30)
+    val suffixId: Column<String> = varchar("suffix_id", length = 50)
     val password: Column<String> = varchar("password", length = 255)
+    val rsaUid: Column<UUID> = uuid("rsa_uid")
     val status: Column<LoginStatus> = enumerationByName(name = "status", klass = LoginStatus::class, length = 10)
     val role: Column<UserRole> = enumerationByName(name = "role", klass = UserRole::class, length = 10)
     val lastLoginAt: Column<OffsetDateTime> =
@@ -44,6 +45,9 @@ data class LoginModel(
     val suffixId: String,
     @NotNull
     val password: String,
+    @NotNull
+    @Serializable(with = UUIDSerializer::class)
+    val rsaUid: UUID,
     @NotNull
     val status: LoginStatus,
     @NotNull

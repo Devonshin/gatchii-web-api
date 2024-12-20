@@ -3,7 +3,7 @@ package com.gatchii.domains.jwt
 import com.gatchii.domains.jwt.RefreshTokenTable.createdAt
 import com.gatchii.domains.jwt.RefreshTokenTable.expireAt
 import com.gatchii.domains.jwt.RefreshTokenTable.isValid
-import com.gatchii.domains.jwt.RefreshTokenTable.userId
+import com.gatchii.domains.jwt.RefreshTokenTable.userUid
 import com.gatchii.shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRefreshTokenQueryList
 import kotlinx.coroutines.test.runTest
@@ -71,7 +71,7 @@ class RefreshTokenRepositoryImplTest {
         val refreshTokenModel = RefreshTokenModel(
             id = UUID.randomUUID(),
             isValid = true,
-            userId = UUID.randomUUID(),
+            userUid = UUID.randomUUID(),
             expireAt = OffsetDateTime.now().plusDays(1),
             createdAt = OffsetDateTime.now(),
         )
@@ -103,7 +103,7 @@ class RefreshTokenRepositoryImplTest {
         resultRow[isValid] = true
         resultRow[expireAt] = expAt
         resultRow[createdAt] = now
-        resultRow[userId] = "019335d8-52d6-7d40-b434-af29f956faec".let { UUID.fromString(it) }
+        resultRow[userUid] = "019335d8-52d6-7d40-b434-af29f956faec".let { UUID.fromString(it) }
         //when
 
         val toDomain = refreshRepository.toDomain(resultRow)
@@ -123,7 +123,7 @@ class RefreshTokenRepositoryImplTest {
         val refreshTokenModel = RefreshTokenModel(
             id = UUID.randomUUID(),
             isValid = false,
-            userId = UUID.randomUUID(),
+            userUid = UUID.randomUUID(),
             expireAt = now.plusDays(1),
             createdAt = now
         )
@@ -152,7 +152,7 @@ class RefreshTokenRepositoryImplTest {
         val refreshTokenModel = RefreshTokenModel(
             expireAt = OffsetDateTime.now().plusDays(1),
             isValid = true,
-            userId = UUID.randomUUID(),
+            userUid = UUID.randomUUID(),
         )
         //when
         val created = refreshRepository.create(refreshTokenModel)
@@ -200,10 +200,10 @@ class RefreshTokenRepositoryImplTest {
         val updateModel = RefreshTokenModel(
             id = "019335d8-52d6-7d40-b434-af29f956faec".let { UUID.fromString(it) },
             isValid = false,
-            userId = UUID.randomUUID(),
+            userUid = UUID.randomUUID(),
             expireAt = OffsetDateTime.now(),
         )
-        val userId = "019345d8-52d6-7d40-b434-af29f956faec".let{ UUID.fromString(it) }
+        val userUid = "019345d8-52d6-7d40-b434-af29f956faec".let{ UUID.fromString(it) }
         //when
         val update = refreshRepository.update(updateModel)
         val find = refreshRepository.read(updateModel.id!!)!!
@@ -211,7 +211,7 @@ class RefreshTokenRepositoryImplTest {
         assertThat(find).isNotNull
         assertThat(find.id).isEqualTo(updateModel.id)
         assertThat(find.isValid).isEqualTo(updateModel.isValid)
-        assertThat(find.userId).isEqualTo(userId)
+        assertThat(find.userUid).isEqualTo(userUid)
         assertThat(find.expireAt).isEqualTo(updateModel.expireAt)
 
     }
@@ -234,7 +234,7 @@ class RefreshTokenRepositoryImplTest {
         val updateModel = RefreshTokenModel(
             id = "019335d9-52d6-7d40-b434-af29f956faec".let { UUID.fromString(it) },
             isValid = false,
-            userId = UUID.randomUUID(),
+            userUid = UUID.randomUUID(),
             expireAt = OffsetDateTime.now(),
         )
         //when

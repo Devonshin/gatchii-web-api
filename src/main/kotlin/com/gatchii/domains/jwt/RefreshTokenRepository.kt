@@ -4,7 +4,7 @@ import com.gatchii.domains.jwt.RefreshTokenTable.createdAt
 import com.gatchii.domains.jwt.RefreshTokenTable.expireAt
 import com.gatchii.domains.jwt.RefreshTokenTable.id
 import com.gatchii.domains.jwt.RefreshTokenTable.isValid
-import com.gatchii.domains.jwt.RefreshTokenTable.userId
+import com.gatchii.domains.jwt.RefreshTokenTable.userUid
 import com.gatchii.shared.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
@@ -21,7 +21,7 @@ interface RefreshTokenRepository: ExposedCrudRepository<RefreshTokenTable, Refre
         if (domain.id != null) {
             it[id] = domain.id!!
         }
-        it[userId] = domain.userId
+        it[userUid] = domain.userUid
         if(domain.expireAt != null) {
             it[expireAt] = domain.expireAt
         }
@@ -32,7 +32,7 @@ interface RefreshTokenRepository: ExposedCrudRepository<RefreshTokenTable, Refre
         return RefreshTokenModel(
             id = row[id].value,
             isValid = row[isValid],
-            userId = row[userId],
+            userUid = row[userUid],
             expireAt = row[expireAt],
             createdAt = row[createdAt],
         )

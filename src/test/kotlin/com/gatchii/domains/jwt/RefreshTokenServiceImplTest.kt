@@ -42,7 +42,7 @@ class RefreshTokenServiceImplTest {
 
     private lateinit var refreshTokenRepository: RefreshTokenRepository
     private lateinit var refreshTokenService: RefreshTokenServiceImpl
-    private val claim: MutableMap<String, Any> = mutableMapOf(
+    private val claim: MutableMap<String, String> = mutableMapOf(
         "userUid" to UUID.randomUUID().toString(),
         "suffixIdx" to "suffixIdx",
         "role" to "user"
@@ -86,7 +86,7 @@ class RefreshTokenServiceImplTest {
         //then
         assertThat(refreshToken).isNotNull()
         assertThat(refreshToken).isNotEmpty()
-        val verify = JwtHandler.verify(refreshToken, algorithm)
+        val verify = JwtHandler.verify(refreshToken, algorithm, jwtConfig)
         val convert = JwtHandler.convert(refreshToken)
 
         assert(verify)
@@ -191,7 +191,7 @@ class RefreshTokenServiceImplTest {
         val renewedRefreshToken = refreshTokenService.renewal(refreshToken)
 
         // Then
-        val verify = JwtHandler.verify(renewedRefreshToken, algorithm)
+        val verify = JwtHandler.verify(renewedRefreshToken, algorithm, jwtConfig)
         val convert = JwtHandler.convert(renewedRefreshToken)
 
         assertThat(renewedRefreshToken).isNotNull
@@ -229,7 +229,7 @@ class RefreshTokenServiceImplTest {
             true, userId, now.plusMonths(1), now, id = UUID.randomUUID()
         )
         coEvery { refreshTokenRepository.create(any()) } returns newRefreshTokenModel
-        coEvery { JwtHandler.verify(any(), any()) } answers {
+        coEvery { JwtHandler.verify(any(), any(), any()) } answers {
             throw JWTVerificationException("Invalid token")
         }
         coEvery { jwkService.findJwk(any()) } returns jwkModel
@@ -247,7 +247,7 @@ class RefreshTokenServiceImplTest {
             refreshTokenRepository.create(any())
         }
         coVerify(exactly = 1) {
-            JwtHandler.verify(any(), any())
+            JwtHandler.verify(any(), any(), any())
         }
         coVerify(exactly = 1) {
             jwkService.findJwk(any())

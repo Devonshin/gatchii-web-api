@@ -35,7 +35,7 @@ class RsaServiceImpl(
     }
 
     override suspend fun getRsa(id: UUID): RsaModel {
-        return findRsa(id)?: throw NotFoundException("No RsaModel found for id: $id")
+        return findRsa(id)?: throw NoSuchElementException("No RsaModel found for id: $id")
     }
 
     override suspend fun findRsa(id: UUID): RsaModel? {
@@ -49,4 +49,13 @@ class RsaServiceImpl(
     override suspend fun deleteRsa(domain: RsaModel) {
         deleteRsa(domain.id?: throw NoSuchElementException("No RsaModel found for id: $domain"))
     }
+
+    override suspend fun encrypt(rsaModel: RsaModel, data: String): String {
+        return RsaPairHandler.encrypt(data, rsaModel.publicKey)
+    }
+
+    override suspend fun decrypt(rsaModel: RsaModel, data: String): String {
+        return RsaPairHandler.decrypt(data, rsaModel.privateKey)
+    }
+
 }
