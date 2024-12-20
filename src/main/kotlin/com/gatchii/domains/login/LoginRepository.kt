@@ -6,6 +6,7 @@ import com.gatchii.domains.login.LoginTable.lastLoginAt
 import com.gatchii.domains.login.LoginTable.prefixId
 import com.gatchii.domains.login.LoginTable.password
 import com.gatchii.domains.login.LoginTable.role
+import com.gatchii.domains.login.LoginTable.rsaUid
 import com.gatchii.domains.login.LoginTable.status
 import com.gatchii.domains.login.LoginTable.suffixId
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
@@ -43,7 +44,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
         ) {
             it[deletedAt] = OffsetDateTime.now()
             //it[prefixId] = EMPTY_STR
-            it[suffixId] = EMPTY_STR
+            //it[suffixId] = EMPTY_STR
             it[password] = EMPTY_STR
             it[role] = UserRole.DELETED
             it[status] = LoginStatus.DELETED
@@ -56,6 +57,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
             id = row[id].value,
             prefixId = row[prefixId],
             password = row[password],
+            rsaUid = row[rsaUid],
             suffixId = row[suffixId],
             lastLoginAt = row[lastLoginAt],
             status = row[status],
@@ -68,6 +70,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
         //it[prefixId] = domain.prefixId
         //it[suffixId] = domain.suffixId
         it[password] = domain.password
+        it[rsaUid] = domain.rsaUid
         it[status] = domain.status
         it[role] = domain.role
         it[lastLoginAt] = domain.lastLoginAt
@@ -77,8 +80,9 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
     override fun toRow(domain: LoginModel): LoginTable.(InsertStatement<EntityID<UUID>>) -> Unit = {
         if(domain.id != null) it[id] = domain.id!!
         it[prefixId] = domain.prefixId
-        it[password] = domain.password
         it[suffixId] = domain.suffixId
+        it[password] = domain.password
+        it[rsaUid] = domain.rsaUid
         it[status] = domain.status
         it[role] = domain.role
         it[lastLoginAt] = domain.lastLoginAt

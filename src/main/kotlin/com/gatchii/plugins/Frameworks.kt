@@ -5,6 +5,7 @@ import com.auth0.jwk.JwkProviderBuilder
 import com.gatchii.domains.jwk.*
 import com.gatchii.domains.jwt.*
 import com.gatchii.domains.login.*
+import com.gatchii.domains.rsa.*
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.gatchii.utils.JwtHandler
 import io.ktor.server.application.*
@@ -22,7 +23,7 @@ fun Application.configureFrameworks() {
         val jwtConfig = JwtHandler.JwtConfig(
             audience = config.property("audience").getString(),
             issuer = config.property("issuer").getString(),
-            expireSec = config.property("expireSec").toString().toLong()
+            expireSec = config.property("expireSec").getString().toString().toLong()
         )
         single<JwkProvider> {
             JwkProviderBuilder(config.property("issuer").getString())
@@ -35,6 +36,7 @@ fun Application.configureFrameworks() {
         single<JwkRepository> { JwkRepositoryImpl(JwkTable) }
         single<LoginRepository> { LoginRepositoryImpl(LoginTable) }
         single<RefreshTokenRepository> { RefreshTokenRepositoryImpl(RefreshTokenTable) }
+        single<RsaRepository> { RsaRepositoryImpl(RsaTable) }
 
         /*services*/
         single<JwkService> {
@@ -43,11 +45,14 @@ fun Application.configureFrameworks() {
         single<JwtService> {
             JwtServiceImpl(jwtConfig, get())
         }
+        single<RsaService> {
+            RsaServiceImpl(get())
+        }
         single<RefreshTokenService> {
             RefreshTokenServiceImpl(jwtConfig, get(), get())
         }
         single<LoginService> {
-            LoginServiceImpl(get(), get(), get(), get())
+            LoginServiceImpl(get(), get(), get(), get(), get())
         }
 
     }

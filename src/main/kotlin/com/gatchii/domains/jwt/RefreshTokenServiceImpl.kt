@@ -23,18 +23,19 @@ class RefreshTokenServiceImpl(
         val algorithm = jwkService.convertAlgorithm(jwk)
 
         //verify
-        JwtHandler.verify(oldRefreshToken, algorithm)
+        JwtHandler.verify(oldRefreshToken, algorithm, jwtConfig)
 
-        val claim = JwtHandler.getClaim(convert)
-        val userId = claim["userUid"].let{
-            UUID.fromString(it as String?)
-        }?: throw InvalidClaimException("uuid is null")
+        val claim =
+            JwtHandler.getClaim(convert).mapValues { it.value.toString() }
+        val userUid = claim["userUid"]?.let {
+            UUID.fromString(it)
+        } ?: throw InvalidClaimException("uuid is null")
 
         invalidateToken(
             RefreshTokenModel(
                 isValid = false,
                 id = UUID.fromString(id),
-                userId = userId
+                userUid = userUid
             )
         )
         //generate new one
@@ -46,13 +47,13 @@ class RefreshTokenServiceImpl(
      *
      */
     override suspend fun generate(
-        claim: MutableMap<String, Any>,
+        claim: Map<String, String>,
     ): String {
-        val userId = claim["userUid"] ?: error("userUid is null in claim [$claim]")
+        val userUid = claim["userUid"] ?: error("userUid is null in claim [$claim]")
         val now = OffsetDateTime.now()
         registerToken(
             RefreshTokenModel(
-                userId = UUID.fromString(userId.toString()),
+                userUid = UUID.fromString(userUid.toString()),
                 isValid = true,
                 expireAt = now.plusSeconds(jwtConfig.expireSec),
                 createdAt = now
@@ -77,5 +78,5 @@ class RefreshTokenServiceImpl(
         refreshTokenModel: RefreshTokenModel
     ): RefreshTokenModel = refreshTokenRepository.update(refreshTokenModel)
 
-
+    override suspend fun config(): JwtConfig = jwtConfig
 }

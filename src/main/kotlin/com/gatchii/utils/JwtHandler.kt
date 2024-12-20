@@ -47,7 +47,7 @@ class JwtHandler {
             return decodedJWT.getClaim("claim")?.asMap()?: error("claim is null")
         }
 
-        fun verify(token: String, algorithm: Algorithm): Boolean {
+        fun verify(token: String, algorithm: Algorithm, jwtConfig: JwtConfig): Boolean {
             return try {
                 val convert = convert(token)
                 val expiresAt = convert.expiresAt
@@ -57,8 +57,8 @@ class JwtHandler {
                     throw JWTVerificationException("Too early request refresh token")
                 }
                 val verifier: JWTVerifier = JWT.require(algorithm)
-                    .withAudience(convert.audience[0])
-                    .withIssuer(convert.issuer)
+                    .withAudience(jwtConfig.audience)
+                    .withIssuer(jwtConfig.issuer)
                     .withJWTId(convert.id)
                     .build()
                 verifier.verify(token)

@@ -36,47 +36,30 @@ data class RsaKeyDataPair(
     val publicKey: PublicKeyData
 )
 
-data class RsaKeyPair(
-    val privateKey: PrivateKey,
-    val publicKey: PublicKey,
-    val keyId: String
-)
-
 class RsaPairHandler {
     companion object {
 
         private const val ALGORITHM = "RSA"
         private const val TRANSFORMATION = "RSA/ECB/PKCS1Padding"
+        private const val KEY_SIZE = 2048
 
-        fun encrypt(
-            textToEncrypt: String,
-            publicKeyStr: String
-        ): String {
+        fun encrypt(textToEncrypt: String, publicKeyStr: String): String {
             return encrypt(textToEncrypt, strToPublicKey(publicKeyStr))
         }
 
-        fun encrypt(
-            textToEncrypt: String,
-            publicKey: PublicKey
-        ): String {
+        fun encrypt(textToEncrypt: String, publicKey: PublicKey): String {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.ENCRYPT_MODE, publicKey)
             val encryptedBytes = cipher.doFinal(textToEncrypt.toByteArray(StandardCharsets.UTF_8))
             return encodeToStr(encryptedBytes)
         }
 
-        fun decrypt(
-            encryptedText: String,
-            privateKeyStr: String
-        ): String {
+        fun decrypt(encryptedText: String, privateKeyStr: String): String {
             val privateKey = strToPrivateKey(privateKeyStr)
             return decrypt(encryptedText, privateKey)
         }
 
-        fun decrypt(
-            encryptedText: String,
-            privateKey: PrivateKey
-        ): String {
+        fun decrypt(encryptedText: String, privateKey: PrivateKey): String {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val decryptedBytes = cipher.doFinal(decodeFromStr(encryptedText))
@@ -84,18 +67,14 @@ class RsaPairHandler {
         }
 
         @Throws(InvalidKeySpecException::class, NoSuchAlgorithmException::class)
-        fun strToPublicKey(
-            publicKeyStr: String
-        ): PublicKey {
+        fun strToPublicKey(publicKeyStr: String): PublicKey {
             val keyBytes: ByteArray = decodeFromStr(publicKeyStr)
             val spec = X509EncodedKeySpec(keyBytes)
             val keyFactory = KeyFactory.getInstance(ALGORITHM)
             return keyFactory.generatePublic(spec)
         }
 
-        fun strToPrivateKey(
-            privateKeyStr: String
-        ): PrivateKey {
+        fun strToPrivateKey(privateKeyStr: String): PrivateKey {
             val kf = KeyFactory.getInstance(ALGORITHM)
             val keySpecPKCS8 = PKCS8EncodedKeySpec(decodeFromStr(privateKeyStr))
             val privateKey = kf.generatePrivate(keySpecPKCS8)
@@ -104,7 +83,7 @@ class RsaPairHandler {
 
         fun generateRSAKeyPair(): KeyPair {
             val keyGen = KeyPairGenerator.getInstance(ALGORITHM)
-            keyGen.initialize(2048)
+            keyGen.initialize(KEY_SIZE)
             return keyGen.generateKeyPair()
         }
 

@@ -14,4 +14,6 @@ interface RsaService {
     suspend fun findRsa(id: UUID): RsaModel?
     suspend fun deleteRsa(id: UUID)
     suspend fun deleteRsa(domain: RsaModel)
+    suspend fun encrypt(rsaModel: RsaModel, data: String): String
+    suspend fun decrypt(rsaModel: RsaModel, data: String): String
 }

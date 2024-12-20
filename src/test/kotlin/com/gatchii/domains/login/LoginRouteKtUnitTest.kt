@@ -34,7 +34,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 @UnitTest
-class LoginRouteKtTest {
+class LoginRouteKtUnitTest {
 
     companion object {
 
@@ -71,7 +71,7 @@ class LoginRouteKtTest {
         loginRepository = mockk()
         //jwtService = mockk()
         //refreshTockenService = mockk()
-        loginService = spyk(LoginServiceImpl(loginRepository, bCryptPasswordEncoder, mockk(), mockk()))
+        loginService = spyk(LoginServiceImpl(loginRepository, bCryptPasswordEncoder, mockk(), mockk(), mockk()))
     }
 
     inline fun setupLoginRouteTest(crossinline block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
@@ -198,7 +198,7 @@ class LoginRouteKtTest {
         val password = bCryptor.encode("wrongPassword")
         val loginUserRequest = LoginUserRequest("01922d5e-9721-77f0-8093-55f799339493", "loginId", "wrongPassword")
         val loginModel = LoginModel(
-            "01922d5e-9721-77f0-8093-55f799339493", "loginId", password,
+            "01922d5e-9721-77f0-8093-55f799339493", "loginId", password, rsaUid = UUID.randomUUID(),
             LoginStatus.ACTIVE, UserRole.USER, OffsetDateTime.now(), null, UUID.randomUUID()
         )
 
@@ -252,4 +252,7 @@ class LoginRouteKtTest {
         coVerify(exactly = 1) { loginService.loginProcess(loginUserRequest) }
 
     }
+
+
+
 }
