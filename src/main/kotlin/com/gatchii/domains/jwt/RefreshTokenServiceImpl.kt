@@ -2,8 +2,8 @@ package com.gatchii.domains.jwt
 
 import com.auth0.jwt.exceptions.InvalidClaimException
 import com.gatchii.domains.jwk.JwkService
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.utils.JwtHandler
-import com.gatchii.utils.JwtHandler.JwtConfig
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -14,7 +14,7 @@ class RefreshTokenServiceImpl(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val jwkService: JwkService,
 ) : RefreshTokenService {
-    //리프레시 토큰의 유효성을 확인하고 유효할 경우 새로운 리프레시 토큰을 반환
+    //유효한 토큰일 경우 새로운 토큰을 반환
     override suspend fun renewal(oldRefreshToken: String): String {
 
         val convert = JwtHandler.convert(oldRefreshToken)
@@ -49,9 +49,9 @@ class RefreshTokenServiceImpl(
     override suspend fun generate(
         claim: Map<String, String>,
     ): String {
-        val userUid = claim["userUid"] ?: error("userUid is null in claim [$claim]")
+        val userUid = claim["userUid"] ?: throw InvalidClaimException("userUid is null in claim [$claim]")
         val now = OffsetDateTime.now()
-        registerToken(
+        val registerToken = registerToken(
             RefreshTokenModel(
                 userUid = UUID.fromString(userUid.toString()),
                 isValid = true,
@@ -61,7 +61,7 @@ class RefreshTokenServiceImpl(
         )
         val jwk = jwkService.findRandomJwk()
         val algorithm = jwkService.convertAlgorithm(jwk)
-        return JwtHandler.generate(jwk.id.toString(), claim, algorithm, jwtConfig)
+        return JwtHandler.generate(registerToken.id.toString(), claim, algorithm, jwtConfig)
     }
 
     /**

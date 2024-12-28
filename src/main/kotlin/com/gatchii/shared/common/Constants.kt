@@ -9,5 +9,7 @@ package com.gatchii.shared.common
 class Constants {
     companion object {
         const val EMPTY_STR = ""
+        const val SUCCESS = "SUCCESS"
+        const val USER_UID = "userUid"
     }
 }

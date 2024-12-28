@@ -4,6 +4,7 @@ import com.gatchii.domains.jwt.JwtService
 import com.gatchii.domains.jwt.RefreshTokenService
 import com.gatchii.domains.rsa.RsaModel
 import com.gatchii.domains.rsa.RsaService
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.gatchii.utils.JwtHandler
@@ -31,11 +32,11 @@ class LoginServiceImplUnitTest {
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
     private lateinit var refreshTockenService: RefreshTokenService
     private lateinit var rsaService: RsaService
-    private val jwtConfig = JwtHandler.JwtConfig(
+    private val jwtConfig = JwtConfig(
         audience = "", issuer = "", expireSec = 10
     )
-    private val refreshJwtConfig = JwtHandler.JwtConfig(
-        audience = "", issuer = "", expireSec = 10
+    private val refreshJwtConfig = JwtConfig(
+        audience = "", issuer = "", expireSec = 100
     )
     private val loginModelStub =
         LoginModel(
@@ -226,15 +227,19 @@ class LoginServiceImplUnitTest {
             id = loginModel.rsaUid,
         )
         coEvery { refreshTockenService.generate(any()) } returns "refreshjwtToken"
-
+        val now = OffsetDateTime.now()
+        val jwtExpireSecond1 = now.plusSeconds(jwtConfig.expireSec.toLong() - 1).toEpochSecond()
+        val jwtExpireSecond2 = now.plusSeconds(jwtConfig.expireSec.toLong() + 1).toEpochSecond()
+        val refreshExpireSeconds1 = now.plusSeconds(refreshJwtConfig.expireSec.toLong() - 1).toEpochSecond()
+        val refreshExpireSeconds2 = now.plusSeconds(refreshJwtConfig.expireSec.toLong() + 1).toEpochSecond()
         //when
         val jwtModel = loginService.loginSuccessAction(loginModel)
         //then
         assertThat(jwtModel).isNotNull
         assertThat(jwtModel.accessToken.token).isEqualTo("jwtToken")
-        assertThat(jwtModel.accessToken.expiresIn).isEqualTo("jwtToken")
+        assertThat(jwtModel.accessToken.expiresIn).isBetween(jwtExpireSecond1, jwtExpireSecond2)
         assertThat(jwtModel.refreshToken.token).isEqualTo("refreshjwtToken")
-        assertThat(jwtModel.refreshToken.expiresIn).isEqualTo("refreshjwtToken")
+        assertThat(jwtModel.refreshToken.expiresIn).isBetween(refreshExpireSeconds1, refreshExpireSeconds2)
 
         coVerify(exactly = 1) { jwtService.generate(any()) }
         coVerify(exactly = 1) { refreshTockenService.generate(any()) }

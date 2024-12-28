@@ -1,8 +1,9 @@
 package com.gatchii.domains.login
 
-import com.gatchii.domains.jwt.JwtModel
 import com.gatchii.plugins.JwtResponse
+import com.gatchii.shared.common.Constants.Companion.SUCCESS
 import io.ktor.http.*
+import io.ktor.server.application.call
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -16,11 +17,6 @@ fun Route.loginRoute(
 ) {
 
     val logger: Logger = KtorSimpleLogger("com.gatchii.domains.main.LoginRoute")
-    fun response(jwt: JwtModel): JwtResponse = JwtResponse(
-        message = "Success",
-        code = HttpStatusCode.OK.value,
-        jwt = jwt
-    )
 
     post("/attempt") {
         val receive = call.receive<LoginUserRequest>()
@@ -29,7 +25,12 @@ fun Route.loginRoute(
         if (attemptAuthenticate == null) {
             call.respond(HttpStatusCode.Unauthorized, HttpStatusCode.Unauthorized)
         } else {
-            call.respond(HttpStatusCode.OK, response(attemptAuthenticate)
+            call.respond(
+                HttpStatusCode.OK, JwtResponse(
+                    message = SUCCESS,
+                    code = HttpStatusCode.OK.value,
+                    jwt = attemptAuthenticate
+                )
             )
         }
     }

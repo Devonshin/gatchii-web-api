@@ -1,5 +1,6 @@
 package com.gatchii.domains.jwk
 
+import com.gatchii.shared.exception.NotSupportMethodException
 import com.gatchii.shared.repository.DatabaseFactoryForTest
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.dao.id.EntityID
@@ -11,12 +12,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import shared.common.UnitTest
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.BeforeTest
 
 /** Package: com.gatchii.domains.jwk Created: Devonshin Date: 18/12/2024 */
 
+@UnitTest
 class JwkRepositoryImplTest {
 
     private lateinit var jwkRepository: JwkRepositoryImpl
@@ -69,62 +73,71 @@ class JwkRepositoryImplTest {
             }
         }
         //when
-        jwkRepository.toRow(jwkModel)(JwkTable, insertStatement)
+        assertThrows<NotSupportMethodException> {
+            jwkRepository.toRow(jwkModel)(JwkTable, insertStatement)
+        }
         //then
-        assertThat(insertStatement.fields[JwkTable.id]).isEqualTo(jwkModel.id)
-        assertThat(insertStatement.fields[JwkTable.privateKey]).isEqualTo(jwkModel.privateKey)
-        assertThat(insertStatement.fields[JwkTable.publicKey]).isEqualTo(jwkModel.publicKey)
-        assertThat(insertStatement.fields[JwkTable.createdAt]).isEqualTo(jwkModel.createdAt)
-        assertThat(insertStatement.fields[JwkTable.deletedAt]).isEqualTo(jwkModel.deletedAt)
 
     }
 
     @Test
     fun toBatchRow() {
+        TODO()
     }
 
     @Test
     fun toDomain() {
+        TODO()
     }
 
     @Test
     fun updateRow() {
+        TODO()
     }
 
     @Test
     fun create() {
+        TODO()
     }
 
     @Test
     fun batchCreate() {
+        TODO()
     }
 
     @Test
     fun findAll() {
+        TODO()
     }
 
     @Test
     fun read() {
+        TODO()
     }
 
     @Test
     fun update() {
+        TODO()
     }
 
     @Test
     fun delete() {
+        TODO()
     }
 
     @Test
     fun testDelete() {
+        TODO()
     }
 
     @Test
     fun getUsableOne() {
+        TODO()
     }
 
     @Test
     fun getTable() {
+        TODO()
     }
 
 }

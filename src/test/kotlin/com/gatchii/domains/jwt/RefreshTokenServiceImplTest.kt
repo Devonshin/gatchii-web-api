@@ -4,6 +4,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.gatchii.domains.jwk.JwkModel
 import com.gatchii.domains.jwk.JwkService
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.generatePublicKeyFromPrivateKey
@@ -47,10 +48,10 @@ class RefreshTokenServiceImplTest {
         "suffixIdx" to "suffixIdx",
         "role" to "user"
     )
-    private val jwtConfig = JwtHandler.JwtConfig(
-        config.config("rfrst").property("audience").getString(),
-        config.config("rfrst").property("issuer").getString(),
-        config.config("rfrst").property("expireSec").getString().toLong()
+    private val jwtConfig = JwtConfig(
+        audience = config.config("rfrst").property("audience").getString(),
+        issuer = config.config("rfrst").property("issuer").getString(),
+        expireSec = config.config("rfrst").property("expireSec").getString().toLong()
     )
 
     private val jwkService = mockk<JwkService>()
@@ -165,10 +166,10 @@ class RefreshTokenServiceImplTest {
     @Test
     fun renewalRefreshToken() = runTest {
         // Given
-        val jwtConfig = JwtHandler.JwtConfig(
-            config.config("rfrst").property("audience").getString(),
-            config.config("rfrst").property("issuer").getString(),
-            config.config("rfrst").property("expireSec").getString().toLong()
+        val jwtConfig = JwtConfig(
+            audience = config.config("rfrst").property("audience").getString(),
+            issuer = config.config("rfrst").property("issuer").getString(),
+            expireSec = config.config("rfrst").property("expireSec").getString().toLong()
         )
 
         val userId = UUID.randomUUID()
@@ -271,10 +272,10 @@ class RefreshTokenServiceImplTest {
         val userId = UUID.randomUUID()
         val now = OffsetDateTime.now()
         val jwt = JwtHandler.generate(
-            UUID.randomUUID().toString(), claim, ecdsA256, JwtHandler.JwtConfig(
-                config.config("rfrst").property("audience").getString(),
-                config.config("rfrst").property("issuer").getString(),
-                60 * 60
+            UUID.randomUUID().toString(), claim, ecdsA256, JwtConfig(
+                audience = config.config("rfrst").property("audience").getString(),
+                issuer = config.config("rfrst").property("issuer").getString(),
+                expireSec = 60 * 60
             )
         )
         val oldRefreshTokenModel = RefreshTokenModel(

@@ -31,7 +31,7 @@ object LoginTable : UUID7Table(name = "login_users") {
             columns = arrayOf(
                 prefixId, suffixId
             ),
-            indexType = "HASH",
+            indexType = "BTREE",
             isUnique = true,
         )
     }

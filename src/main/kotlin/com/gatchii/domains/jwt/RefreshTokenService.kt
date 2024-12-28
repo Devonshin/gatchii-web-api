@@ -1,6 +1,7 @@
 package com.gatchii.domains.jwt
 
-import com.gatchii.utils.JwtHandler.JwtConfig
+import com.gatchii.plugins.JwtConfig
+
 
 /**
  * Package: com.gatchii.domains.jwt

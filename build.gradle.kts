@@ -11,14 +11,14 @@ val ktorVersion: String by project
 
 plugins {
     kotlin("jvm") version "2.1.0"
-    id("io.ktor.plugin") version "3.0.2"
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    id("io.ktor.plugin") version "2.3.13"
+    //id("io.ktor.plugin") version "3.0.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("idea")
     //kotlin("plugin.power-assert") version "2.0.0"
-    application
 }
 
-group = "com.gatchii"
+group = "com.gatchii.webapi"
 version = "0.0.1"
 
 application {
@@ -75,7 +75,7 @@ dependencies {
     implementation("com.github.f4b6a3:uuid-creator:6.0.0")
     implementation("io.ktor:ktor-server-request-validation:$ktorVersion")
     // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-api
-    implementation("io.fabric8:kubernetes-client-api:6.13.4")
+    //implementation("io.fabric8:kubernetes-client-api:6.13.4")
 
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinVersion")

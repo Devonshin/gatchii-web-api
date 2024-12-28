@@ -5,7 +5,9 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
-import io.ktor.util.logging.KtorSimpleLogger
+import com.gatchii.plugins.JwtConfig
+import io.ktor.util.logging.*
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.*
 
@@ -31,12 +33,17 @@ class JwtHandler {
             val sign = JWT.create()
                 .withAudience(jwtConfig.audience)
                 .withIssuer(jwtConfig.issuer)
+                .withKeyId(algorithm.signingKeyId)
                 .withIssuedAt(now.toInstant())
                 .withClaim(JWT_CLAIM_NAME, claim)
                 .withJWTId(jwtId)
-                .withExpiresAt(now.plusSeconds(jwtConfig.expireSec.toLong()).toInstant())
+                .withExpiresAt(expiresAt(now, jwtConfig.expireSec.toLong()))
                 .sign(algorithm)
             return sign
+        }
+
+        fun expiresAt(now: OffsetDateTime, plusSec: Long): Instant {
+            return now.plusSeconds(plusSec).toInstant()
         }
 
         fun convert(token: String): DecodedJWT {
@@ -69,10 +76,4 @@ class JwtHandler {
             }
         }
     }
-
-    data class JwtConfig (
-        val audience: String,
-        val issuer: String,
-        val expireSec: Long = 3600,
-    )
 }
