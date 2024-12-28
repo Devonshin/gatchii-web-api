@@ -1,13 +1,9 @@
 package com.gatchii.utils
 
 import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.exceptions.AlgorithmMismatchException
-import com.auth0.jwt.exceptions.IncorrectClaimException
-import com.auth0.jwt.exceptions.JWTDecodeException
-import com.auth0.jwt.exceptions.JWTVerificationException
-import com.auth0.jwt.exceptions.TokenExpiredException
+import com.auth0.jwt.exceptions.*
+import com.gatchii.plugins.JwtConfig
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,8 +21,10 @@ class JwtHandlerTest {
     private val generateKeyPair = ECKeyPairHandler.generateKeyPair()
     private var algorithm: Algorithm = Algorithm.ECDSA256(generateKeyPair.public as ECPublicKey, generateKeyPair.private as ECPrivateKey)
     private val claim = mapOf("username" to "testUser", "role" to "user")
-    private val jwtConfig = JwtHandler.JwtConfig(
-        "rfrstAudience", "rfrstIssuer", 60
+    private val jwtConfig = JwtConfig(
+        audience = "rfrstAudience",
+        issuer = "rfrstIssuer",
+        expireSec = 60
     )
 
     private var jwtStr: String = JwtHandler.generate("id", claim, algorithm, jwtConfig)
@@ -98,8 +96,10 @@ class JwtHandlerTest {
     @Test
     fun `too early verify should throw JWTVerificationException`() {
         // Given
-        val token = JwtHandler.generate("id", claim, algorithm, JwtHandler.JwtConfig(
-            "rfrstAudience", "rfrstIssuer", 60 * 60
+        val token = JwtHandler.generate("id", claim, algorithm, JwtConfig(
+            audience = "rfrstAudience",
+            issuer = "rfrstIssuer",
+            expireSec = 60 * 60
         ))
         // When
         assertThrows<JWTVerificationException> {
@@ -120,7 +120,10 @@ class JwtHandlerTest {
     @Test
     fun `verify should throw IncorrectClaimException for token with incorrect audience`() {
         // Given
-        val incorrectConfig = JwtHandler.JwtConfig("incorrect-audience", jwtConfig.issuer, 60)
+        val incorrectConfig = JwtConfig(
+            audience = "incorrect-audience",
+            issuer = jwtConfig.issuer,
+            expireSec = 60)
         val token = JwtHandler.generate("id", claim, algorithm, incorrectConfig)
 
         // When
@@ -132,7 +135,10 @@ class JwtHandlerTest {
     @Test
     fun `verify should throw IncorrectClaimException for token with incorrect issuer`() {
         // Given
-        val incorrectConfig = JwtHandler.JwtConfig(jwtConfig.audience, "incorrect-issuer", 60)
+        val incorrectConfig = JwtConfig(
+            audience = jwtConfig.audience,
+            issuer = "incorrect-issuer",
+            expireSec = 60)
         val token = JwtHandler.generate("id", claim, algorithm, incorrectConfig)
 
         // When
@@ -145,7 +151,10 @@ class JwtHandlerTest {
     @Test
     fun `verify should throw TokenExpiredException for expired token`() {
         // Given
-        val expiredConfig = JwtHandler.JwtConfig(jwtConfig.audience, jwtConfig.issuer, -60)
+        val expiredConfig = JwtConfig(
+            audience = jwtConfig.audience,
+            issuer = jwtConfig.issuer,
+            expireSec = -60)
         val token = JwtHandler.generate("id", claim, algorithm, expiredConfig)
 
         // When
@@ -158,7 +167,10 @@ class JwtHandlerTest {
     @Test
     fun `verify should throw AlgorithmMismatchException for token with incorrect algorithm`() {
         // Given
-        val expiredConfig = JwtHandler.JwtConfig(jwtConfig.audience, jwtConfig.issuer, -60)
+        val expiredConfig = JwtConfig(
+            audience = jwtConfig.audience,
+            issuer = jwtConfig.issuer,
+            expireSec = -60)
         val token = JwtHandler.generate("id", claim, algorithm, expiredConfig)
         val algorithm: Algorithm = Algorithm.HMAC256("incorrect-secret")
         // When

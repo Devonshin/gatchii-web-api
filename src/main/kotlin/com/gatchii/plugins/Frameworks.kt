@@ -7,7 +7,6 @@ import com.gatchii.domains.jwt.*
 import com.gatchii.domains.login.*
 import com.gatchii.domains.rsa.*
 import com.gatchii.utils.BCryptPasswordEncoder
-import com.gatchii.utils.JwtHandler
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
@@ -20,13 +19,16 @@ fun Application.configureFrameworks() {
 
         single<BCryptPasswordEncoder> { BCryptPasswordEncoder() }
         val config = environment.config.config("jwt")
-        val jwtConfig = JwtHandler.JwtConfig(
+        val jwtConfig = JwtConfig(
             audience = config.property("audience").getString(),
             issuer = config.property("issuer").getString(),
+            realm = config.property("realm").getString(),
+            jwkIssuer = config.property("jwkIssuer").getString(),
             expireSec = config.property("expireSec").getString().toString().toLong()
         )
         single<JwkProvider> {
             JwkProviderBuilder(config.property("issuer").getString())
+
                 .cached(10, 24, TimeUnit.HOURS)
                 .rateLimited(10, 1, TimeUnit.MINUTES)
                 .build()

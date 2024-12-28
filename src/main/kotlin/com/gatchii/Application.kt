@@ -18,13 +18,14 @@ fun Application.module() {
     configureDatabases()
     configureFrameworks()
     configureStatusPages()
-    configureSecurity()
     //configureHTTP()
+    if (env != "test") { //테스트 환경에서는 route에 주입되는 서비스를 분기하기 위해
+        println("Configure routing...")
+        configureRouting()
+        configureSecurity()
+    }
     configureMonitoring()
     configureSerialization()
     configureValidation()
-    if (env != "test") { //테스트 환경에서는 route에 주입되는 서비스를 분기하기 위해
-        configureRouting()
-    }
     onApplicationLoaded()
 }

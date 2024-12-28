@@ -3,8 +3,9 @@ package com.gatchii.domains.jwt
 import com.auth0.jwt.JWT
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.gatchii.domains.jwk.JwkService
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.utils.JwtHandler
-import com.gatchii.utils.JwtHandler.JwtConfig
+import java.util.UUID
 
 /**
  * A service implementation that handles JWT generation, decoding, and claims extraction.
@@ -30,7 +31,7 @@ class JwtServiceImpl(
     override suspend fun generate(claim: Map<String, String>): String {
         val jwk = jwkService.findRandomJwk()
         val algorithm = jwkService.convertAlgorithm(jwk)
-        return JwtHandler.generate(jwtId = jwk.id.toString(), claim, algorithm, jwtConfig)
+        return JwtHandler.generate(jwtId = UUID.randomUUID().toString(), claim, algorithm, jwtConfig)
     }
 
     /**

@@ -1,8 +1,7 @@
 package com.gatchii.domains.jwt
 
-import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
-import com.gatchii.utils.JwtHandler.JwtConfig
+import com.gatchii.plugins.JwtConfig
 
 /**
  * Package: com.gatchii.domains.jwt

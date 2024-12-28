@@ -3,17 +3,22 @@ package com.gatchii.domains.jwt
 import com.auth0.jwt.algorithms.Algorithm
 import com.gatchii.domains.jwk.JwkModel
 import com.gatchii.domains.jwk.JwkService
-import com.gatchii.utils.ECKeyPairHandler
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.*
-import io.ktor.server.testing.*
+import io.ktor.util.*
+import io.ktor.util.logging.*
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import shared.TestJwkServer
 import shared.common.UnitTest
-import java.security.interfaces.ECPrivateKey
-import java.security.interfaces.ECPublicKey
+import java.security.Security
+import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -24,6 +29,28 @@ import kotlin.test.assertTrue
 
 @UnitTest
 class JwtServiceImplTest {
+
+    init {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(BouncyCastleProvider())
+        }
+    }
+    companion object {
+        val logger = KtorSimpleLogger("com.gatchii.domains.jwt.JwtServiceImplTest")
+        val jwkServer = TestJwkServer() // Start temporary JWK server
+
+        @BeforeAll
+        @JvmStatic
+        fun init() {
+            jwkServer.start()
+        }
+
+        @AfterAll
+        @JvmStatic
+        fun destroy() {
+            jwkServer.stop()
+        }
+    }
 
     private val config = HoconApplicationConfig(
         ConfigFactory.parseString(
@@ -37,26 +64,27 @@ class JwtServiceImplTest {
             """
         )
     )
-    private val jwtConfig = JwtHandler.JwtConfig(
-        config.config("jwt").property("audience").getString(),
-        config.config("jwt").property("issuer").getString(),
-        config.config("jwt").property("expireSec").getString().toLong()
+    private val jwtConfig = JwtConfig(
+        audience = config.config("jwt").property("audience").getString(),
+        issuer = config.config("jwt").property("issuer").getString(),
+        expireSec = config.config("jwt").property("expireSec").getString().toLong()
     )
     private val jwkService = mockk<JwkService>()
     private val jwtService = JwtServiceImpl(jwtConfig, jwkService)
-    private val jwkModel: JwkModel = JwkModel(
-        privateKey = "privateKey",
-        publicKey = "publicKey",
-        id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
+    val keyPair = jwkServer.getGeneratedKeyPair()
+    val randomJwk = JwkModel(
+        publicKey = keyPair.public.encoded.encodeBase64(),
+        privateKey = keyPair.private.encoded.encodeBase64(),
+        createdAt = OffsetDateTime.now(),
+        id = UUID.randomUUID()
     )
-    private val keyPaire = ECKeyPairHandler.generateKeyPair()
-    private val algorithm = Algorithm.ECDSA256(keyPaire.public as ECPublicKey?, keyPaire.private as ECPrivateKey?)
+    private val algorithm = Algorithm.ECDSA256(RefreshTokenRouteTest.Companion.jwkServer.getJwkProvider())
 
     @BeforeTest
     fun setup() {
         coEvery {
             jwkService.findRandomJwk()
-        } returns jwkModel
+        } returns randomJwk
         coEvery {
             jwkService.convertAlgorithm(any())
         } returns algorithm
@@ -71,13 +99,12 @@ class JwtServiceImplTest {
         val result = jwtService.generate(claim)
         val converted = jwtService.convert(result)
         // Then
-        assert(converted?.getClaim("claim")!!.asMap().containsKey("username")) // Confirm if the token contains the expected "kid"
-        assert(converted.getClaim("claim")!!.asMap().containsKey("role")) // Confirm if the token contains the expected "role"
-        assert(converted.id == jwkModel.id.toString()) // Confirm if the token contains the expected "kid"
+        assertTrue(converted?.getClaim("claim")!!.asMap().containsKey("username")) // Confirm if the token contains the expected "kid"
+        assertTrue(converted.getClaim("claim")!!.asMap().containsKey("role")) // Confirm if the token contains the expected "role"
     }
 
     @Test
-    fun `test generateJwt with empty claim`() = testApplication {
+    fun `test generateJwt with empty claim`() = runTest {
         // Given
         val claim = emptyMap<String, String>()
         // When
@@ -88,12 +115,11 @@ class JwtServiceImplTest {
 
         assertFalse(claimMap.containsKey("username")) // Confirm if the token contains the expected "username"
         assertFalse(claimMap.containsKey("role")) // Confirm if the token contains the expected "role"
-        assert(converted.id == jwkModel.id.toString()) // Confirm if the token contains the expected "kid"
     }
 
 
     @Test
-    fun `test jwt expired duration is 60,000 seconds `() = testApplication {
+    fun `test jwt expired duration is 60,000 seconds `() = runTest {
 
         // Given
         val claim = emptyMap<String, String>()

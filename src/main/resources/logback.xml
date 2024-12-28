@@ -28,4 +28,6 @@
 	<logger name="io.netty" level="INFO"/>
 	<logger name="com.zaxxer.hikari.pool" level="INFO"/>
 	<logger name="Exposed" level="INFO"/>
+	<logger name="com.zaxxer.hikari.HikariConfig" level="INFO"/>
+	<logger name="io.ktor.auth.jwt" level="TRACE"/>
 </configuration>

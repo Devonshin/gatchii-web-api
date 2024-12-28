@@ -5,6 +5,7 @@ import com.gatchii.domains.jwt.JwtModel
 import com.gatchii.domains.jwt.RefreshToken
 import com.gatchii.plugins.ErrorResponse
 import com.gatchii.plugins.JwtResponse
+import com.gatchii.shared.common.Constants.Companion.SUCCESS
 import com.gatchii.shared.repository.DatabaseFactoryForTest
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.typesafe.config.ConfigFactory
@@ -14,6 +15,8 @@ import io.ktor.http.*
 import io.ktor.server.config.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
+import io.ktor.util.logging.KtorSimpleLogger
+import io.ktor.util.logging.Logger
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -37,18 +40,12 @@ import kotlin.test.Test
 class LoginRouteKtUnitTest {
 
     companion object {
-
+        val logger: Logger = KtorSimpleLogger("com.gatchii.domains.login.LoginRouteKtUnitTest")
         private val databaseFactory: DatabaseFactoryForTest = DatabaseFactoryForTest()
-        private lateinit var loginRepository: LoginRepository
-        //private lateinit var jwtService: JwtService
-        //private lateinit var refreshTockenService: RefreshTokenService
-        private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
-        lateinit var loginService: LoginService
-
         @BeforeAll
         @JvmStatic
         fun init() {
-            println("init..")
+            logger.debug("init..")
             databaseFactory.connect()
             transaction {
                 addLogger(StdOutSqlLogger)
@@ -61,9 +58,15 @@ class LoginRouteKtUnitTest {
         @AfterAll
         @JvmStatic
         fun destroy() {
+            logger.debug("destroy..")
             databaseFactory.close()
         }
     }
+    private lateinit var loginRepository: LoginRepository
+    //private lateinit var jwtService: JwtService
+    //private lateinit var refreshTockenService: RefreshTokenService
+    private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
+    lateinit var loginService: LoginService
 
     @BeforeTest
     fun setup() {
@@ -245,10 +248,11 @@ class LoginRouteKtUnitTest {
         }.bodyAsText()
 
         //then
-        val errorResponse = Json.decodeFromString<JwtResponse>(response)
-        println("errorResponse: $errorResponse")
-        assert(errorResponse.code == HttpStatusCode.OK.value)
-        assert(errorResponse.message == "Success")
+        val jwtResponse = Json.decodeFromString<JwtResponse>(response)
+        println("errorResponse: $jwtResponse")
+        assert(jwtResponse.code == HttpStatusCode.OK.value)
+        assert(jwtResponse.message == SUCCESS)
+        assert(jwtResponse.jwt == jwtModel)
         coVerify(exactly = 1) { loginService.loginProcess(loginUserRequest) }
 
     }
