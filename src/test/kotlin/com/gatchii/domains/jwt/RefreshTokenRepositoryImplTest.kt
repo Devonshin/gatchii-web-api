@@ -4,7 +4,7 @@ import com.gatchii.domains.jwt.RefreshTokenTable.createdAt
 import com.gatchii.domains.jwt.RefreshTokenTable.expireAt
 import com.gatchii.domains.jwt.RefreshTokenTable.isValid
 import com.gatchii.domains.jwt.RefreshTokenTable.userUid
-import com.gatchii.shared.repository.DatabaseFactoryForTest
+import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRefreshTokenQueryList
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.AssertionsForClassTypes.assertThat

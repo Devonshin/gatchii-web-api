@@ -1,7 +1,7 @@
 package com.gatchii.domains.login
 
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
-import com.gatchii.shared.repository.DatabaseFactoryForTest
+import shared.repository.DatabaseFactoryForTest
 import com.github.f4b6a3.uuid.UuidCreator
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat

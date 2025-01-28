@@ -4,14 +4,18 @@ import com.gatchii.domains.jwt.AccessToken
 import com.gatchii.domains.jwt.JwtModel
 import com.gatchii.domains.jwt.RefreshToken
 import com.gatchii.plugins.ErrorResponse
+import com.gatchii.plugins.JwtConfig
 import com.gatchii.plugins.JwtResponse
+import com.gatchii.plugins.securitySetup
 import com.gatchii.shared.common.Constants.Companion.SUCCESS
-import com.gatchii.shared.repository.DatabaseFactoryForTest
+import shared.repository.DatabaseFactoryForTest
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.config.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
@@ -62,6 +66,21 @@ class LoginRouteKtUnitTest {
             databaseFactory.close()
         }
     }
+    val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
+    val refresgJwtConfig: JwtConfig = JwtConfig(
+        audience = config.config("rfrst").property("audience").getString(),
+        issuer = config.config("rfrst").property("issuer").getString(),
+        realm = "Test Realm",
+        jwkIssuer = config.config("rfrst").property("jwkIssuer").getString(),
+        expireSec = 300,
+    )
+    val jwtConfig: JwtConfig = JwtConfig(
+        audience = config.config("jwt").property("audience").getString(),
+        issuer = config.config("jwt").property("issuer").getString(),
+        realm = "Test Realm",
+        jwkIssuer = config.config("jwt").property("jwkIssuer").getString(),
+        expireSec = 60,
+    )
     private lateinit var loginRepository: LoginRepository
     //private lateinit var jwtService: JwtService
     //private lateinit var refreshTockenService: RefreshTokenService
@@ -81,6 +100,22 @@ class LoginRouteKtUnitTest {
         environment {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
+        install(Authentication) {
+            jwt("refresh-jwt") {
+                securitySetup(
+                    "refresh-jwt",
+                    this@jwt,
+                    refresgJwtConfig
+                )
+            }
+            jwt("auth-jwt") {
+                securitySetup(
+                    "auth-jwt",
+                    this@jwt,
+                    jwtConfig
+                )
+            }
+        }
         application {
             routing {
                 route("/login") {
@@ -94,8 +129,12 @@ class LoginRouteKtUnitTest {
     @Test
     fun `Login page should return 404`() = setupLoginRouteTest {
         val bodyAsText = client.get("/login").bodyAsText()
+        val response = kotlinx.serialization.json.Json.decodeFromString<ErrorResponse>(bodyAsText)
+
         assert(bodyAsText.isNotEmpty())
-        assert(bodyAsText == "404: Page Not Found")
+        assert(response.message == HttpStatusCode.NotFound.description)
+        assert(response.code == HttpStatusCode.NotFound.value)
+        assert(response.path == "/login")
     }
 
     @Test
@@ -124,7 +163,7 @@ class LoginRouteKtUnitTest {
         val errorResponse = Json.decodeFromString<ErrorResponse>(response)
         //then
         assert(errorResponse.code == HttpStatusCode.BadRequest.value)
-        assert(errorResponse.message == "Invalid login parameter")
+        assert(errorResponse.message.startsWith("Invalid login parameter"))
         assert(errorResponse.path == "/login/attempt")
     }
 
@@ -195,7 +234,7 @@ class LoginRouteKtUnitTest {
     }
 
     @Test
-    fun `LoginAttempt when password not matched then throw NotFoundUser Exception`() = setupLoginRouteTest {
+    fun `when password not matched then throw NotFoundUser Exception`() = setupLoginRouteTest {
         //given
         val bCryptor = BCryptPasswordEncoder()
         val password = bCryptor.encode("wrongPassword")

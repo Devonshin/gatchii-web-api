@@ -1,13 +1,13 @@
 package com.gatchii.domains.jwt
 
-import com.auth0.jwk.JwkProviderBuilder
 import com.auth0.jwt.algorithms.Algorithm
 import com.gatchii.domains.jwk.JwkModel
 import com.gatchii.domains.jwk.JwkService
 import com.gatchii.plugins.ErrorResponse
 import com.gatchii.plugins.JwtConfig
 import com.gatchii.plugins.securitySetup
-import com.gatchii.shared.repository.DatabaseFactoryForTest
+import com.gatchii.shared.common.Constants.Companion.USER_UID
+import shared.repository.DatabaseFactoryForTest
 import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
@@ -21,7 +21,6 @@ import io.ktor.server.testing.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
 import io.mockk.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.AfterAll
@@ -31,30 +30,33 @@ import shared.common.UnitTest
 import java.security.Security
 import java.time.OffsetDateTime
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 
 @UnitTest
 class RefreshTokenRouteTest {
-    init {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
-        }
-    }
     val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
     private val refreshTokenRepository: RefreshTokenRepository = mockk()
-    val jwtConfig: JwtConfig = JwtConfig(
+    val refresgJwtConfig: JwtConfig = JwtConfig(
         audience = config.config("rfrst").property("audience").getString(),
         issuer = config.config("rfrst").property("issuer").getString(),
         realm = "Test Realm",
         jwkIssuer = config.config("rfrst").property("jwkIssuer").getString(),
         expireSec = 300,
     )
+    val jwtConfig: JwtConfig = JwtConfig(
+        audience = config.config("jwt").property("audience").getString(),
+        issuer = config.config("jwt").property("issuer").getString(),
+        realm = "Test Realm",
+        jwkIssuer = config.config("jwt").property("jwkIssuer").getString(),
+        expireSec = 60,
+    )
     private val jwkService: JwkService = mockk(relaxed = true)
+    private val jwtService: JwtService = mockk(relaxed = true)
     val refreshTokenService = RefreshTokenServiceImpl(
         refreshTokenRepository = refreshTokenRepository,
-        jwtConfig = jwtConfig,
-        jwkService = jwkService
+        jwtConfig = refresgJwtConfig,
+        jwkService = jwkService,
+        jwtService = jwtService
     )
 
     companion object {
@@ -83,16 +85,18 @@ class RefreshTokenRouteTest {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
         install(Authentication) {
-            val jwkProvider = JwkProviderBuilder(jwkServer.url)
-                .cached(10, 24, TimeUnit.HOURS)
-                .rateLimited(10, 1, TimeUnit.MINUTES)
-                .build()
             jwt("refresh-jwt") {
                 securitySetup(
                     "refresh-jwt",
                     this@jwt,
-                    jwtConfig,
-                    jwkProvider
+                    refresgJwtConfig
+                )
+            }
+            jwt("auth-jwt") {
+                securitySetup(
+                    "auth-jwt",
+                    this@jwt,
+                    jwtConfig
                 )
             }
         }
@@ -105,7 +109,6 @@ class RefreshTokenRouteTest {
         }
         block()
     }
-
 
     @Test
     fun `empty refresh token throw Unauthorized exception`() = setupApplication {
@@ -127,7 +130,7 @@ class RefreshTokenRouteTest {
             id = UUID.randomUUID(),
             isValid = true,
             userUid = userUid,
-            expireAt = OffsetDateTime.now().plusMinutes(10)
+            expireAt = OffsetDateTime.now().minusSeconds(10)
         )
         val randomJwk = JwkModel(
             publicKey = keyPair.public.encoded.encodeBase64(),
@@ -145,7 +148,7 @@ class RefreshTokenRouteTest {
         //when
         val oldRefreshToken = refreshTokenService.generate(
             mapOf(
-                "userUid" to userUid.toString(),
+                USER_UID to userUid.toString(),
                 "username" to "testname",
                 "role" to "USER",
             )
@@ -160,7 +163,7 @@ class RefreshTokenRouteTest {
         val response = Json.decodeFromString<ErrorResponse>(bodyAsText)
         assert(bodyAsText.isNotEmpty())
         assert(response.code == HttpStatusCode.Unauthorized.value)
-        assert(response.message == "Unauthorized")
+        assert(response.message == "Token has expired")
         assert(response.path == "/refresh-token/renewal")
 
         coVerify(exactly = 1) { refreshTokenRepository.create(any()) }
@@ -173,7 +176,7 @@ class RefreshTokenRouteTest {
     }
 
     @Test
-    fun `userUid missing refresh token throw Unauthorized exception`() = setupApplication {
+    fun `missing userUid refresh token throw Unauthorized exception`() = setupApplication {
         //given
         val algorithm = Algorithm.ECDSA256(jwkServer.getJwkProvider())
         val claim = mapOf(
@@ -183,7 +186,7 @@ class RefreshTokenRouteTest {
         val tokenId = "9f6958e0-b515-4316-87a6-e7d9b11bee1c"
         //when
         val oldRefreshToken = JwtHandler.generate(tokenId, claim, algorithm, jwtConfig)
-        logger.info("oldRefreshToken: $oldRefreshToken")
+        println("oldRefreshToken: $oldRefreshToken")
         val bodyAsText = client.post("/refresh-token/renewal") {
             header("Authorization", "Bearer $oldRefreshToken")
             contentType(ContentType.Application.Json)
@@ -192,15 +195,10 @@ class RefreshTokenRouteTest {
         val response = Json.decodeFromString<ErrorResponse>(bodyAsText)
         assert(bodyAsText.isNotEmpty())
         assert(response.code == HttpStatusCode.Unauthorized.value)
-        assert(response.message == "Unauthorized")
+        assert(response.message == "userUid is null")
         assert(response.path == "/refresh-token/renewal")
 
-        logger.debug("bodyAsText: $bodyAsText")
+        println("bodyAsText: $bodyAsText")
     }
 
 }
-
-@Serializable
-data class JwkResponse(
-    val keys: Set<Map<String, String>>
-)

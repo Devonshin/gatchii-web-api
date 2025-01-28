@@ -30,11 +30,6 @@ import kotlin.test.assertTrue
 @UnitTest
 class JwtServiceImplTest {
 
-    init {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
-        }
-    }
     companion object {
         val logger = KtorSimpleLogger("com.gatchii.domains.jwt.JwtServiceImplTest")
         val jwkServer = TestJwkServer() // Start temporary JWK server
@@ -78,13 +73,17 @@ class JwtServiceImplTest {
         createdAt = OffsetDateTime.now(),
         id = UUID.randomUUID()
     )
-    private val algorithm = Algorithm.ECDSA256(RefreshTokenRouteTest.Companion.jwkServer.getJwkProvider())
+
+    private val algorithm = Algorithm.ECDSA256(jwkServer.getJwkProvider())
 
     @BeforeTest
     fun setup() {
         coEvery {
             jwkService.findRandomJwk()
         } returns randomJwk
+        coEvery {
+            jwkService.getProvider(any())
+        } returns jwkServer.getJwkProvider()
         coEvery {
             jwkService.convertAlgorithm(any())
         } returns algorithm

@@ -2,7 +2,7 @@ package com.gatchii.domains.jwk
 
 import com.gatchii.shared.model.BaseModel
 import com.gatchii.shared.repository.UUID7Table
-import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import java.time.OffsetDateTime
 import java.util.*
@@ -19,7 +19,7 @@ object JwkTable : UUID7Table(
     val privateKey = varchar("private_key", length = 255)
     val publicKey = text("public_key")
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
-    val deletedAt = timestampWithTimeZone("deleted_at").nullable()
+    val deletedAt: Column<OffsetDateTime?> = timestampWithTimeZone("deleted_at").nullable()
 }
 
 data class JwkModel(
@@ -29,4 +29,3 @@ data class JwkModel(
     val deletedAt: OffsetDateTime? = null,
     override var id: UUID? = null,
 ) : BaseModel<UUID>
-

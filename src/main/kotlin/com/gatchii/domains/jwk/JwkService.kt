@@ -13,6 +13,10 @@ import java.util.*
 interface JwkService {
     suspend fun findRandomJwk(): JwkModel
     suspend fun findJwk(id: UUID): JwkModel
-    suspend fun convertAlgorithm(jwk: JwkModel): Algorithm
+    suspend fun convertAlgorithm(provider: ECDSAKeyProvider): Algorithm
     suspend fun getProvider(jwk: JwkModel): ECDSAKeyProvider
+    suspend fun findAllJwk(): Set<Map<String, String>>
+    suspend fun deleteJwk(id: UUID): JwkModel
+    suspend fun createJwk(domain: JwkModel): JwkModel
 }
+

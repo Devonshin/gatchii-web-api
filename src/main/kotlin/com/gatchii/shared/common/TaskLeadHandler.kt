@@ -43,8 +43,8 @@ abstract class TaskLeadHandler {
         // Executes all tasks by verifying if the current instance is the leader.
         fun runTasks() {
             logger.info("Run tasks...")
-            tasks.forEach {
-                if (isLeader()) {
+            if (isLeader()) {
+                tasks.forEach {
                     logger.info("Run leader task...${it.taskName()}")
                     it.doTask()
                 }

@@ -16,8 +16,11 @@ fun Application.configureStatusPages() {
     install(StatusPages) {
         val logger: Logger = KtorSimpleLogger("com.gatchii.plugins.StatusPages")
         status(HttpStatusCode.NotFound) { status ->
-            logger.error("Not Found: ${status.value}: ${status.description}")
-            call.respondText(text = "404: Page Not Found", status = status)
+            call.respond(HttpStatusCode.NotFound, ErrorResponse(
+                message = status.description,
+                code = status.value,
+                path = call.request.uri
+            ))
         }
 
         status(HttpStatusCode.Unauthorized) { status ->
@@ -64,6 +67,7 @@ fun Application.configureStatusPages() {
             )
         }
     }
+    println("StatusPage installed")
 }
 
 @Serializable

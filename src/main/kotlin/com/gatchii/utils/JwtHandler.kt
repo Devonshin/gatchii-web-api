@@ -5,6 +5,9 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
+import com.gatchii.domains.jwt.AccessToken
+import com.gatchii.domains.jwt.JwtModel
+import com.gatchii.domains.jwt.RefreshToken
 import com.gatchii.plugins.JwtConfig
 import io.ktor.util.logging.*
 import java.time.Instant
@@ -74,6 +77,20 @@ class JwtHandler {
                 println("Invalid JWT: ${e.message}")
                 throw e
             }
+        }
+
+        fun newJwtModel(accessToken: String, jwtConfig: JwtConfig, refreshToken: String, refreshJwtConfig: JwtConfig): JwtModel {
+            val now = OffsetDateTime.now()
+            return JwtModel(
+                accessToken = AccessToken(
+                    token = accessToken,
+                    expiresIn = now.plusSeconds(jwtConfig.expireSec).toEpochSecond(),
+                ),
+                refreshToken = RefreshToken(
+                    token = refreshToken,
+                    expiresIn = now.plusSeconds(refreshJwtConfig.expireSec).toEpochSecond(),
+                ),
+            )
         }
     }
 }

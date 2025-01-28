@@ -26,8 +26,5 @@ fun Route.refreshTokenRoute(
             }
         }
     }
-    get("/.well-known/jwks.json") {
-        call.respondText("token. ..")
-    }
 
 }

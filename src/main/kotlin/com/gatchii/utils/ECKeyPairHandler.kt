@@ -20,8 +20,12 @@ import java.util.*
  * Date: 13/09/2024
  */
 class ECKeyPairHandler {
-
     companion object {
+        init {
+            if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+                Security.addProvider(BouncyCastleProvider())
+            }
+        }
         const val ALGORITHM = "EC"
         const val SIGN_ALGORITHM = "SHA256withECDSA"
         const val PRAM_SPEC = "secp256r1"

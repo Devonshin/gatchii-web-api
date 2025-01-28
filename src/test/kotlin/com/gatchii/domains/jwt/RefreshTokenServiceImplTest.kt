@@ -1,7 +1,9 @@
 package com.gatchii.domains.jwt
 
 import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.InvalidClaimException
 import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.interfaces.ECDSAKeyProvider
 import com.gatchii.domains.jwk.JwkModel
 import com.gatchii.domains.jwk.JwkService
 import com.gatchii.plugins.JwtConfig
@@ -11,6 +13,7 @@ import com.gatchii.utils.ECKeyPairHandler.Companion.generatePublicKeyFromPrivate
 import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.*
+import io.ktor.util.*
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -27,7 +30,6 @@ import java.util.*
 
 @UnitTest
 class RefreshTokenServiceImplTest {
-
     private val config = HoconApplicationConfig(
         ConfigFactory.parseString(
             """
@@ -36,6 +38,12 @@ class RefreshTokenServiceImplTest {
                     issuer = "TestIssuer"
                     property = "TestProperty"
                     expireSec = 600
+                }
+                jwt {
+                    audience = "TestAudience"
+                    issuer = "TestIssuer"
+                    property = "TestProperty"
+                    expireSec = 60
                 }
             """
         )
@@ -55,19 +63,32 @@ class RefreshTokenServiceImplTest {
     )
 
     private val jwkService = mockk<JwkService>()
+    private val jwtService = mockk<JwtService>()
+    private val keyPaire = ECKeyPairHandler.generateKeyPair()
     private val jwkModel: JwkModel = JwkModel(
-        privateKey = "privateKey",
-        publicKey = "publicKey",
+        privateKey = keyPaire.private.encoded.encodeBase64(),
+        publicKey = keyPaire.public.encoded.encodeBase64(),
         id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000"),
     )
-    private val keyPaire = ECKeyPairHandler.generateKeyPair()
-    private val algorithm = Algorithm.ECDSA256(keyPaire.public as ECPublicKey?, keyPaire.private as ECPrivateKey?)
+    val provider = object : ECDSAKeyProvider {
+        override fun getPrivateKey(): ECPrivateKey {
+            return keyPaire.private as ECPrivateKey
+        }
 
+        override fun getPublicKeyById(keyId: String?): ECPublicKey {
+            return keyPaire.public as ECPublicKey
+        }
+
+        override fun getPrivateKeyId(): String {
+            return jwkModel.id.toString()
+        }
+    }
+    private val algorithm = Algorithm.ECDSA256(keyPaire.public as ECPublicKey?, keyPaire.private as ECPrivateKey?)
 
     @BeforeEach
     fun setUp() {
         refreshTokenRepository = mockk<RefreshTokenRepository>()
-        refreshTokenService = RefreshTokenServiceImpl(jwtConfig, refreshTokenRepository, jwkService)
+        refreshTokenService = RefreshTokenServiceImpl(jwtConfig, refreshTokenRepository, jwkService, jwtService)
     }
 
     @Test
@@ -79,6 +100,7 @@ class RefreshTokenServiceImplTest {
         )
         coEvery { refreshTokenRepository.create(any()) } returns refreshTokenModel
         coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
 
         //when
@@ -105,10 +127,10 @@ class RefreshTokenServiceImplTest {
     }
 
     @Test
-    fun `generate with non userUuid claim throw IllegalStateException `() = runTest {
+    fun `generate with non userUuid claim throw InvalidClaimException `() = runTest {
         //given
         //when
-        assertThrows<IllegalStateException> {
+        assertThrows<InvalidClaimException> {
             refreshTokenService.generate(
                 mutableMapOf(
                     "suffixIdx" to "suffixIdx",
@@ -166,12 +188,16 @@ class RefreshTokenServiceImplTest {
     @Test
     fun renewalRefreshToken() = runTest {
         // Given
-        val jwtConfig = JwtConfig(
+        val refreshJwtConfig = JwtConfig(
             audience = config.config("rfrst").property("audience").getString(),
             issuer = config.config("rfrst").property("issuer").getString(),
             expireSec = config.config("rfrst").property("expireSec").getString().toLong()
         )
-
+        val jwtConfig = JwtConfig(
+            audience = config.config("jwt").property("audience").getString(),
+            issuer = config.config("jwt").property("issuer").getString(),
+            expireSec = config.config("jwt").property("expireSec").getString().toLong()
+        )
         val userId = UUID.randomUUID()
         val now = OffsetDateTime.now()
 
@@ -182,23 +208,34 @@ class RefreshTokenServiceImplTest {
             true, userId, now.plusMonths(1), now, id = UUID.randomUUID()
         )
         coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
         coEvery { jwkService.findJwk(any()) } returns jwkModel
         coEvery { refreshTokenRepository.update(any()) } returns oldRefreshTokenModel
         coEvery { refreshTokenRepository.create(any()) } returns newRefreshTokenModel
+        coEvery { jwtService.config() } returns jwtConfig
+        coEvery { jwtService.generate(any()) } returns ""
 
         // When
         val refreshToken = refreshTokenService.generate(claim)
         val renewedRefreshToken = refreshTokenService.renewal(refreshToken)
 
         // Then
-        val verify = JwtHandler.verify(renewedRefreshToken, algorithm, jwtConfig)
-        val convert = JwtHandler.convert(renewedRefreshToken)
+        val token = renewedRefreshToken.refreshToken.token
+
+        val verify = JwtHandler.verify(token, algorithm, refreshJwtConfig)
+        val convert = JwtHandler.convert(token)
 
         assertThat(renewedRefreshToken).isNotNull
         assertThat(verify).isTrue
-        assertThat(convert.token).isEqualTo(renewedRefreshToken)
+        assertThat(convert.token).isEqualTo(token)
 
+        coVerify(exactly = 1) {
+            jwtService.config()
+        }
+        coVerify(exactly = 1) {
+            jwtService.generate(any())
+        }
         coVerify(exactly = 1) {
             jwkService.findJwk(any())
         }
@@ -210,6 +247,9 @@ class RefreshTokenServiceImplTest {
         }
         coVerify(exactly = 2) {
             jwkService.findRandomJwk()
+        }
+        coVerify(exactly = 3) {
+            jwkService.getProvider(any())
         }
         coVerify(exactly = 3) {
             jwkService.convertAlgorithm(any())
@@ -235,6 +275,7 @@ class RefreshTokenServiceImplTest {
         }
         coEvery { jwkService.findJwk(any()) } returns jwkModel
         coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
 
         val refreshToken = refreshTokenService.generate(claim)
@@ -255,6 +296,9 @@ class RefreshTokenServiceImplTest {
         }
         coVerify(exactly = 1) {
             jwkService.findRandomJwk()
+        }
+        coVerify(exactly = 1) {
+            jwkService.getProvider(any())
         }
         coVerify(exactly = 2) {
             jwkService.convertAlgorithm(any())
@@ -283,6 +327,7 @@ class RefreshTokenServiceImplTest {
         )
 
         coEvery { jwkService.findJwk(any()) } returns jwkModel
+        coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns ecdsA256
 
         // When
@@ -294,6 +339,9 @@ class RefreshTokenServiceImplTest {
         // Then
         coVerify(exactly = 1) {
             jwkService.findJwk(any())
+        }
+        coVerify(exactly = 1) {
+            jwkService.getProvider(any())
         }
         coVerify(exactly = 1) {
             jwkService.convertAlgorithm(any())

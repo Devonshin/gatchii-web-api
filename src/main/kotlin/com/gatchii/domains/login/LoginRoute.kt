@@ -20,16 +20,16 @@ fun Route.loginRoute(
 
     post("/attempt") {
         val receive = call.receive<LoginUserRequest>()
-        val attemptAuthenticate = loginService.loginProcess(receive)
-        logger.info("Attempt Authenticate: $attemptAuthenticate")
-        if (attemptAuthenticate == null) {
+        val result = loginService.loginProcess(receive)
+        logger.info("Attempt Authenticate result: $result")
+        if (result == null) {
             call.respond(HttpStatusCode.Unauthorized, HttpStatusCode.Unauthorized)
         } else {
             call.respond(
                 HttpStatusCode.OK, JwtResponse(
                     message = SUCCESS,
                     code = HttpStatusCode.OK.value,
-                    jwt = attemptAuthenticate
+                    jwt = result
                 )
             )
         }

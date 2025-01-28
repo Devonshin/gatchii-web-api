@@ -76,13 +76,9 @@ interface ExposedCrudRepository<
         return@dbQuery
     }
 
-    override suspend fun delete(domain: DOMAIN) = delete { table.id eq domain.id }
+    override suspend fun delete(domain: DOMAIN) = delete(domain.id)
 
-    override suspend fun delete(id: T) = delete { table.id eq id }
-
-    suspend fun <T> suspendTransaction(
-        block: suspend Transaction.() -> T
-    ): T = newSuspendedTransaction(Dispatchers.IO, statement = block)
+    override suspend fun delete(id: T?) = delete { table.id eq id }
 
     fun <T> dbQuery(block: () -> T): T = transaction {
         addLogger(StdOutSqlLogger)
