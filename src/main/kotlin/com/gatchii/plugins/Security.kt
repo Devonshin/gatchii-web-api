@@ -1,12 +1,12 @@
 package com.gatchii.plugins
 
-import com.auth0.jwk.JwkProvider
 import com.auth0.jwk.JwkProviderBuilder
 import com.gatchii.shared.common.Constants.Companion.USER_UID
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
@@ -15,6 +15,8 @@ import java.security.Security
 import java.time.OffsetDateTime
 import java.util.concurrent.TimeUnit
 
+val logger: Logger = KtorSimpleLogger("com.gatchii.plugins.Security")
+
 fun Application.configureSecurity() {
 
     if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
@@ -22,10 +24,7 @@ fun Application.configureSecurity() {
     }
     // Please read the jwt property from the config file if you are using EngineMain
     val env = environment.config
-    val jwkProvider = JwkProviderBuilder(env.config("jwt").property("jwkIssuer").getString())
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
+
     install(Authentication) {
         jwt("auth-jwt") {
             securitySetup(
@@ -37,8 +36,7 @@ fun Application.configureSecurity() {
                     realm = env.config("jwt").property("realm").getString(),
                     jwkIssuer = env.config("jwt").property("jwkIssuer").getString(),
                     expireSec = env.config("jwt").property("expireSec").getString().toLong()
-                ),
-                jwkProvider
+                )
             )
         }
         jwt("refresh-jwt") {
@@ -51,41 +49,49 @@ fun Application.configureSecurity() {
                     realm = env.config("rfrst").property("realm").getString(),
                     jwkIssuer = env.config("rfrst").property("jwkIssuer").getString(),
                     expireSec = env.config("rfrst").property("expireSec").getString().toLong()
-                ),
-                jwkProvider
+                )
             )
         }
     }
-
+    println("Security installed")
 }
 
-fun securitySetup(name: String, config: JWTAuthenticationProvider.Config, jwtConfig: JwtConfig, jwkProvider: JwkProvider) {
-    val logger: Logger = KtorSimpleLogger("com.gatchii.plugins.configureSecurity")
+fun securitySetup(name: String, config: JWTAuthenticationProvider.Config, jwtConfig: JwtConfig) {
+
     val jwtAudience = jwtConfig.audience
     val jwtRealm = jwtConfig.realm
     val jwtIssuer = jwtConfig.issuer
     val jwkIssuer = jwtConfig.jwkIssuer
     val authFailureKey = AttributeKey<String>("authFailure")
-
+    val jwkProvider = JwkProviderBuilder(jwkIssuer)
+        .cached(10, 24, TimeUnit.HOURS)
+        .rateLimited(10, 1, TimeUnit.MINUTES)
+        .build()
     logger.info("$name JWT Config: realm=$jwtRealm, issuer=$jwtIssuer, audience=$jwtAudience, jwkIssuer=$jwkIssuer")
     config.realm = jwtRealm
     config.verifier(jwkProvider, jwtIssuer) {
-        logger.info("here..")
-        acceptLeeway(10)
+        acceptLeeway(30)
         withAudience(jwtAudience)
         withIssuer(jwtIssuer)
     }
 
     config.validate { credential ->
         val payload = credential.payload
-        logger.info(" is valid ?  = $payload")
-        if (payload.expiresAt?.time?.minus(OffsetDateTime.now().toEpochSecond()).let { it!! < 0 }) {
+        logger.info(" is valid ?  = ${payload.expiresAt} : " +
+                "\npayload.expiresAt?.time : ${payload.expiresAt?.time}" +
+                "\nOffsetDateTime.now().toEpochSecond() : ${OffsetDateTime.now().toEpochSecond()}" +
+                "\nminusTime : ${payload.expiresAt?.time?.minus(OffsetDateTime.now().toEpochSecond() * 1000)}"
+        )
+
+        if (payload.expiresAt?.time?.minus(OffsetDateTime.now().toEpochSecond() * 1000).let { it!! < 0 }) {
             attributes.put(authFailureKey, "Token has expired")
+            logger.info(" is valid ? = Token has expired")
             return@validate null
         }
         val userUid = payload.getClaim(USER_UID).asString()
         if (userUid == null) {
             attributes.put(authFailureKey, "userUid is null")
+            logger.info(" is valid ? = userUid is null")
             return@validate null
         }
 
@@ -96,8 +102,11 @@ fun securitySetup(name: String, config: JWTAuthenticationProvider.Config, jwtCon
         val failureReason = call.attributes.getOrNull(authFailureKey)
         logger.error("$name : Invalid or expired token failureReason=[$failureReason], realm=$realm, issuer=$jwtIssuer")
         call.respond(
-            if (failureReason != null) HttpStatusCode.BadRequest else HttpStatusCode.Unauthorized,
-            failureReason ?: "Token is not valid or has expired"
+            ErrorResponse(
+                message = failureReason ?: "Token is not valid or has expired",
+                code = HttpStatusCode.Unauthorized.value,
+                path = call.request.uri
+            )
         )
     }
 }

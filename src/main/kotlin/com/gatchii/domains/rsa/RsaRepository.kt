@@ -49,7 +49,7 @@ interface RsaRepository : ExposedCrudRepository<RsaTable, RsaModel, UUID> {
             exponent = row[exponent],
             modulus = row[modulus],
             createdAt = row[createdAt],
-            deletedAt = row[deletedAt]
+            deletedAt = row.getOrNull(deletedAt)
         )
     }
 

@@ -19,5 +19,5 @@ interface CrudRepository<D : BaseModel<T>, T> {
     suspend fun read(id: T): D?
     suspend fun update(domain: D): D
     suspend fun delete(domain: D)
-    suspend fun delete(id: T)
+    suspend fun delete(id: T?)
 }

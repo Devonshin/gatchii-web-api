@@ -38,7 +38,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
 
     override suspend fun delete(domain: LoginModel) = delete(domain.id!!)
 
-    override suspend fun delete(id: UUID) = dbQuery {
+    override suspend fun delete(id: UUID?) = dbQuery {
         table.update(
             where = { LoginTable.id eq id }
         ) {
@@ -62,7 +62,7 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
             lastLoginAt = row[lastLoginAt],
             status = row[status],
             role = row[role],
-            deletedAt = row[deletedAt]
+            deletedAt = row.getOrNull(deletedAt)
         )
     }
 

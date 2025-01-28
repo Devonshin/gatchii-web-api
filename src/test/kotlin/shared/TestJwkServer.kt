@@ -1,7 +1,7 @@
 package shared
 
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
-import com.gatchii.domains.jwt.JwkResponse
+import com.gatchii.domains.jwk.JwkResponse
 import com.gatchii.domains.jwt.RefreshTokenRouteTest.Companion.logger
 import com.gatchii.utils.ECKeyPairHandler.Companion.PRAM_SPEC
 import com.nimbusds.jose.jwk.Curve
@@ -13,6 +13,7 @@ import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bouncycastle.jce.ECNamedCurveTable
@@ -54,8 +55,6 @@ class TestJwkServer {
 
     val keyId = "secp256r1-key-${System.currentTimeMillis()}"
     fun getJwk(keyPair: KeyPair): ECKey {
-        logger.info("keyPair privateKey: ${keyPair.private.encoded.encodeBase64()}")
-        logger.info("keyPair publicKey: ${keyPair.public.encoded.encodeBase64()}")
         // Create ECKey using Nimbus JOSE + JWT
         val ecKey = ECKey.Builder(Curve.P_256, keyPair.public as ECPublicKey?)
             .privateKey(keyPair.private)

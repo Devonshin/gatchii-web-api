@@ -11,7 +11,7 @@ fun Application.configureValidation() {
     install(RequestValidation) {
         validate<LoginUserRequest> { loginRequest ->
             if (loginRequest.prefixId.isBlank() || loginRequest.suffixId.isBlank() || loginRequest.password.isBlank())
-                ValidationResult.Invalid("Invalid login parameter")
+                ValidationResult.Invalid("Invalid login parameter in request $loginRequest")
             else ValidationResult.Valid
         }
     }

@@ -14,7 +14,7 @@ interface RefreshTokenService {
     suspend fun generate(claim: Map<String, String>): String
 
     //verify and refresh
-    suspend fun renewal(refreshToken: String): String
+    suspend fun renewal(refreshToken: String): JwtModel
 
     suspend fun registerToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 

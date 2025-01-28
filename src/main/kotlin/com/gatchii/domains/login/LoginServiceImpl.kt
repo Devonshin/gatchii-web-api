@@ -5,6 +5,7 @@ import com.gatchii.domains.rsa.RsaService
 import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
 import com.gatchii.shared.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.utils.JwtHandler.Companion.newJwtModel
 import io.ktor.util.logging.*
 import java.time.OffsetDateTime
 
@@ -74,16 +75,11 @@ class LoginServiceImpl(
         )
         val jwtConfig = jwtService.config()
         val refreshJwtConfig = refreshTockenService.config()
-        val now = OffsetDateTime.now()
-        return JwtModel(
-            accessToken = AccessToken(
-                token = jwtService.generate(claim),
-                expiresIn = now.plusSeconds(jwtConfig.expireSec).toEpochSecond(),
-            ),
-            refreshToken = RefreshToken(
-                token = refreshTockenService.generate(refreshClaim),
-                expiresIn = now.plusSeconds(refreshJwtConfig.expireSec).toEpochSecond(),
-            ),
+        return newJwtModel(
+            accessToken = jwtService.generate(claim),
+            jwtConfig = jwtConfig,
+            refreshToken = refreshTockenService.generate(refreshClaim),
+            refreshJwtConfig = refreshJwtConfig
         )
     }
 

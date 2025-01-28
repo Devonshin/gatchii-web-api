@@ -26,6 +26,7 @@ fun Application.configureDatabases() {
     )
     databaseFactory.connect()
     initData()
+    println("Database connected")
 }
 
 //fun Application.configureH2() {

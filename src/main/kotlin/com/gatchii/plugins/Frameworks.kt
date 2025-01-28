@@ -51,7 +51,7 @@ fun Application.configureFrameworks() {
             RsaServiceImpl(get())
         }
         single<RefreshTokenService> {
-            RefreshTokenServiceImpl(jwtConfig, get(), get())
+            RefreshTokenServiceImpl(jwtConfig, get(), get(), get())
         }
         single<LoginService> {
             LoginServiceImpl(get(), get(), get(), get(), get())
@@ -62,5 +62,6 @@ fun Application.configureFrameworks() {
     install(Koin) {
         slf4jLogger()
         modules(appModule)
+        println("Framework installed")
     }
 }

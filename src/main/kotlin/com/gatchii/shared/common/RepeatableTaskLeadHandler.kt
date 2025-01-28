@@ -16,6 +16,7 @@ class RepeatableTaskLeadHandler(
             throw Exception("Repeat in minute must be greater than 0")
         }
     }
+
     override fun taskName(): String {
         return taskName
     }

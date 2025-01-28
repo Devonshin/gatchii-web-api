@@ -17,7 +17,6 @@ import java.util.*
 @UnitTest
 class JwtHandlerTest {
 
-    private var kid: String = UUID.randomUUID().toString()
     private val generateKeyPair = ECKeyPairHandler.generateKeyPair()
     private var algorithm: Algorithm = Algorithm.ECDSA256(generateKeyPair.public as ECPublicKey, generateKeyPair.private as ECPrivateKey)
     private val claim = mapOf("username" to "testUser", "role" to "user")

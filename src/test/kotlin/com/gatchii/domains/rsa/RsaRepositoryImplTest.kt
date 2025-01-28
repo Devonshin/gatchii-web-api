@@ -1,7 +1,7 @@
 package com.gatchii.domains.rsa;
 
 import com.gatchii.shared.exception.NotSupportMethodException
-import com.gatchii.shared.repository.DatabaseFactoryForTest
+import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRsaQueryList
 import com.gatchii.utils.RsaPairHandler
 import kotlinx.coroutines.test.runTest
