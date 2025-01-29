@@ -1,8 +1,8 @@
 package shared
 
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
-import com.gatchii.domains.jwk.JwkResponse
-import com.gatchii.domains.jwt.RefreshTokenRouteTest.Companion.logger
+import com.gatchii.domain.jwk.JwkResponse
+import com.gatchii.domain.jwt.RefreshTokenRouteTest.Companion.logger
 import com.gatchii.utils.ECKeyPairHandler.Companion.PRAM_SPEC
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey

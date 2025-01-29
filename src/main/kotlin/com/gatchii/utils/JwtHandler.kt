@@ -5,9 +5,9 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.auth0.jwt.interfaces.DecodedJWT
-import com.gatchii.domains.jwt.AccessToken
-import com.gatchii.domains.jwt.JwtModel
-import com.gatchii.domains.jwt.RefreshToken
+import com.gatchii.domain.jwt.AccessToken
+import com.gatchii.domain.jwt.JwtModel
+import com.gatchii.domain.jwt.RefreshToken
 import com.gatchii.plugins.JwtConfig
 import io.ktor.util.logging.*
 import java.time.Instant
@@ -23,7 +23,7 @@ import java.util.*
 class JwtHandler {
 
     companion object {
-        private val logger = KtorSimpleLogger("com.gatchii.utils.JwtHandler")
+        private val logger = KtorSimpleLogger(this::class.simpleName ?: "JwtHandler")
         private const val JWT_CLAIM_NAME = "claim"
         private const val TOKEN_REFRESH_THRESHOLD_MINUTES = 30L
         fun generate(
@@ -54,7 +54,7 @@ class JwtHandler {
         }
 
         fun getClaim(decodedJWT: DecodedJWT): MutableMap<String, Any> {
-            return decodedJWT.getClaim("claim")?.asMap()?: error("claim is null")
+            return decodedJWT.getClaim("claim")?.asMap() ?: error("claim is null")
         }
 
         fun verify(token: String, algorithm: Algorithm, jwtConfig: JwtConfig): Boolean {
@@ -74,7 +74,7 @@ class JwtHandler {
                 verifier.verify(token)
                 true
             } catch (e: JWTVerificationException) {
-                println("Invalid JWT: ${e.message}")
+                logger.error("Invalid JWT: ${e.message}")
                 throw e
             }
         }

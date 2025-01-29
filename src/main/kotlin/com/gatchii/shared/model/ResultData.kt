@@ -1,6 +1,6 @@
 package com.gatchii.shared.model
 
-import java.util.UUID
+import java.util.*
 
 /**
  * Package: com.gatchii.shared.model

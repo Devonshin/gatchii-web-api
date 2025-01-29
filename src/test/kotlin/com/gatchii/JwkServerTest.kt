@@ -16,7 +16,7 @@ import kotlin.test.Test
 @UnitTest
 class JwkServerTest {
     companion object {
-        val logger = KtorSimpleLogger("com.gatchii.JwkServerTest")
+        val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServerTest")
         val jwkServer = TestJwkServer() // Start temporary JWK server
 
         @BeforeAll
