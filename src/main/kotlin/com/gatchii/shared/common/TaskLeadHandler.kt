@@ -10,7 +10,7 @@ abstract class TaskLeadHandler {
 
     companion object {
 
-        private val logger: Logger = KtorSimpleLogger("com.gatchii.shared.common.TaskHandler")
+        private val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "TaskLeadHandler")
         private val tasks = mutableListOf<TaskLeadHandler>()
         private val taskNameSet = mutableSetOf<String>()
 
@@ -38,11 +38,11 @@ abstract class TaskLeadHandler {
         fun removeTask(taskName: String) {
             taskNameSet.remove(taskName)
             tasks.removeIf { it.taskName() == taskName }
+            logger.info("Removed task $taskName")
         }
 
         // Executes all tasks by verifying if the current instance is the leader.
         fun runTasks() {
-            logger.info("Run tasks...")
             if (isLeader()) {
                 tasks.forEach {
                     logger.info("Run leader task...${it.taskName()}")

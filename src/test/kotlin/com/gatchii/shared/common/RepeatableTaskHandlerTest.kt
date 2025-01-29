@@ -22,7 +22,7 @@ class RepeatableTaskHandlerTest {
         //when
         //then
         assertThrows<Exception> {
-            RepeatableTaskLeadHandler(taskName, repeatInMinute, task)
+            RepeatableTaskHandler(taskName, repeatInMinute, task)
         }
     }
 
@@ -37,7 +37,7 @@ class RepeatableTaskHandlerTest {
         //when
         //then
         assertThrows<Exception> {
-            RepeatableTaskLeadHandler(taskName, repeatInMinute, task)
+            RepeatableTaskHandler(taskName, repeatInMinute, task)
         }
     }
 
@@ -49,7 +49,7 @@ class RepeatableTaskHandlerTest {
         val repeatInMinute = 1
         val task: () -> Unit = {}
 
-        val handler = RepeatableTaskLeadHandler(taskName, repeatInMinute, task)
+        val handler = RepeatableTaskHandler(taskName, repeatInMinute, task)
 
         //when
         val result = handler.taskName()
@@ -70,7 +70,7 @@ class RepeatableTaskHandlerTest {
             executionCount.incrementAndGet()
         }
 
-        val handler = RepeatableTaskLeadHandler(taskName, Integer.MIN_VALUE, task)
+        val handler = RepeatableTaskHandler(taskName, Integer.MIN_VALUE, task)
         val delayTimeMills = (15 * 1000).toLong()
         //when
         handler.doTask()

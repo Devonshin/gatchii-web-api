@@ -1,9 +1,9 @@
 package com.gatchii.plugins
 
-import com.gatchii.domains.jwt.JwtModel
-import com.gatchii.domains.jwt.refreshTokenRoute
-import com.gatchii.domains.login.loginRoute
-import com.gatchii.domains.main.mainRoute
+import com.gatchii.domain.jwt.JwtModel
+import com.gatchii.domain.jwt.refreshTokenRoute
+import com.gatchii.domain.login.loginRoute
+import com.gatchii.domain.main.mainRoute
 import io.ktor.server.application.*
 import io.ktor.server.plugins.autohead.*
 import io.ktor.server.plugins.doublereceive.*

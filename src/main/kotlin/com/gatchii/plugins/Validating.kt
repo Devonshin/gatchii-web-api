@@ -1,6 +1,6 @@
 package com.gatchii.plugins
 
-import com.gatchii.domains.login.LoginUserRequest
+import com.gatchii.domain.login.LoginUserRequest
 import io.ktor.server.application.*
 import io.ktor.server.plugins.requestvalidation.*
 
