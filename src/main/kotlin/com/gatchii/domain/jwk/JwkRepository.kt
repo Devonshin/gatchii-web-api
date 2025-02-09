@@ -5,9 +5,10 @@ import com.gatchii.domain.jwk.JwkTable.deletedAt
 import com.gatchii.domain.jwk.JwkTable.id
 import com.gatchii.domain.jwk.JwkTable.privateKey
 import com.gatchii.domain.jwk.JwkTable.publicKey
-import com.gatchii.shared.exception.NotSupportMethodException
-import com.gatchii.shared.model.ResultData
-import com.gatchii.shared.repository.ExposedCrudRepository
+import com.gatchii.common.exception.NotSupportMethodException
+import com.gatchii.common.model.ResultData
+import com.gatchii.common.repository.ExposedCrudRepository
+import com.gatchii.domain.jwk.JwkTable.status
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
@@ -29,6 +30,7 @@ interface JwkRepository : ExposedCrudRepository<JwkTable, JwkModel, UUID> {
         if (domain.id != null) it[id] = domain.id!!
         it[publicKey] = domain.publicKey
         it[privateKey] = domain.privateKey
+        it[status] = domain.status.name
         if (domain.createdAt != null) {
             it[createdAt] = domain.createdAt
         }
@@ -41,6 +43,7 @@ interface JwkRepository : ExposedCrudRepository<JwkTable, JwkModel, UUID> {
         if (it.id != null) this[id] = it.id!!
         this[publicKey] = it.publicKey
         this[privateKey] = it.privateKey
+        this[status] = it.status.name
         if (it.createdAt != null) {
             this[createdAt] = it.createdAt
         }
@@ -54,6 +57,7 @@ interface JwkRepository : ExposedCrudRepository<JwkTable, JwkModel, UUID> {
             id = row[id].value,
             privateKey = row[privateKey],
             publicKey = row[publicKey],
+            status = JwkStatus.valueOf(row[status]),
             createdAt = row.getOrNull(createdAt),
             deletedAt = row.getOrNull(deletedAt)
         )

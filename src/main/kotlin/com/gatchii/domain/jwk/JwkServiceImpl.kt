@@ -2,47 +2,58 @@ package com.gatchii.domain.jwk
 
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
-import com.gatchii.shared.common.DailyTaskHandler
-import com.gatchii.shared.common.TaskLeadHandler
+import com.gatchii.common.task.TaskLeadHandler
+import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
+import io.ktor.util.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
+import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.*
-import kotlin.random.Random
+import kotlin.jvm.optionals.getOrElse
 
 /** Package: com.gatchii.domains.jwk Created: Devonshin Date: 16/09/2024 */
 
-class JwkServiceImpl(
+class JwkServiceImpl (
     private val jwkRepository: JwkRepository,
+    private val taskHandlerProvider: (() -> Unit) -> TaskLeadHandler,
 ) : JwkService {
 
     private val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServiceImpl")
+    lateinit var task: TaskLeadHandler
 
-    init {
-        TaskLeadHandler.addTasks(
-            DailyTaskHandler(
-                "jwkTask",
-                Calendar.Builder().setTimeOfDay(0, 0, 0).build().time,
-            ) {
-                logger.info("jwk setup task start...")
-                runBlocking {
-                    val allUsableJwk = jwkRepository.getAllUsable(
-                        null, true, Int.MAX_VALUE, false
-                    )
-                }
-            })
+    fun stopTask() {
+        logger.info("stopTask called..")
+        task.stopTask()
     }
 
-    override suspend fun findRandomJwk(): JwkModel {
-        val jwk = jwkRepository.getUsableOne(Random.nextInt(0, 20))
-            ?: throw NoSuchElementException("Not found usable jwks.")
-        return jwk
+    //초기화
+    override suspend fun initializeJwk(time: LocalDateTime) {
+        val allUsableJwks = findAllUsableJwk()
+        logger.info("allUsableJwks size : ${allUsableJwks.size} ")
+        for (jwkModel in allUsableJwks) {
+            JwkHandler.addJwk(jwkModel)
+        }
+        task = taskHandlerProvider {
+            logger.info("call taskProcessing.. ")
+            runBlocking {
+                taskProcessing()
+            }
+        }
+        TaskLeadHandler.addTasks(task)
+    }
+
+    override suspend fun getRandomJwk(): JwkModel {
+        return JwkHandler.getRandomActiveJwk().getOrElse {
+            throw NoSuchElementException("Not found usable jwks.")
+        }
     }
 
     override suspend fun findJwk(id: UUID): JwkModel {
@@ -94,22 +105,59 @@ class JwkServiceImpl(
             val jwk = getJwk(provider)
             jwkSet.add(Json.decodeFromString<Map<String, String>>(jwk.toJSONString()))
         }
-
         return jwkSet
+    }
+
+    override suspend fun findAllUsableJwk(): List<JwkModel> {
+        return jwkRepository
+            .getAllUsable(null, true, JwkHandler.jwkMaxCapacity(), false)
+            .datas
     }
 
     override suspend fun deleteJwk(id: UUID) {
         jwkRepository.delete(id)
-        return
     }
 
-    override suspend fun createJwk(domain: JwkModel): JwkModel {
-        return jwkRepository.create(domain)
+    override suspend fun deleteJwks(jwks: List<JwkModel>) {
+        jwks.filter { it.id != null }.forEach { deleteJwk(it.id!!) }
     }
 
-    override suspend fun createJwks(domains: List<JwkModel>): List<JwkModel> {
-        return jwkRepository.batchCreate(domains)
+    override suspend fun createJwk(): JwkModel {
+        val generatedKeyPair = ECKeyPairHandler.generateKeyPair()
+        return jwkRepository.create(
+            JwkModel(
+                privateKey = generatedKeyPair.private.encoded.encodeBase64(),
+                publicKey = generatedKeyPair.public.encoded.encodeBase64(),
+                createdAt = OffsetDateTime.now()
+            )
+        )
     }
 
+    override suspend fun createJwks(size: Int): List<JwkModel> {
+        val now = OffsetDateTime.now()
+        val jwks = List<JwkModel>(size) {
+            val generatedKeyPair = ECKeyPairHandler.generateKeyPair()
+            JwkModel(
+                privateKey = generatedKeyPair.private.encoded.encodeBase64(),
+                publicKey = generatedKeyPair.public.encoded.encodeBase64(),
+                createdAt = now
+            )
+        }
+        return jwkRepository.batchCreate(jwks)
+    }
+
+    //jwk 1개 추가, active를 inactive로 변경, 제거
+    override suspend fun taskProcessing() {
+        logger.debug("jwkSchedulingProc start")
+        val createdJwk = createJwk()
+        JwkHandler.addJwk(createdJwk)
+        JwkHandler.getRemovalJwks()
+            .forEach { jwk ->
+                logger.debug("delete jwk : {}", jwk.id.toString())
+                deleteJwk(jwk.id!!)
+            }
+
+        logger.debug("jwkSchedulingProc end")
+    }
 }
 

@@ -1,4 +1,4 @@
-package com.gatchii.shared.common
+package com.gatchii.common.const
 
 /**
  * Package: com.gatchii.shared.common

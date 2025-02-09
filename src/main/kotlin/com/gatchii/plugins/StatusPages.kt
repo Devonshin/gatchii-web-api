@@ -1,6 +1,6 @@
 package com.gatchii.plugins
 
-import com.gatchii.shared.exception.NotFoundUserException
+import com.gatchii.common.exception.NotFoundUserException
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.requestvalidation.*

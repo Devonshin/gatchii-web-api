@@ -1,4 +1,4 @@
-package com.gatchii.shared.repository
+package com.gatchii.common.repository
 
 import com.github.f4b6a3.uuid.UuidCreator
 import org.jetbrains.exposed.dao.id.EntityID

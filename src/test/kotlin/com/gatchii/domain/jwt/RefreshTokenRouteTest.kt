@@ -6,7 +6,7 @@ import com.gatchii.domain.jwk.JwkService
 import com.gatchii.plugins.ErrorResponse
 import com.gatchii.plugins.JwtConfig
 import com.gatchii.plugins.securitySetup
-import com.gatchii.shared.common.Constants.Companion.USER_UID
+import com.gatchii.common.const.Constants.Companion.USER_UID
 import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
@@ -139,7 +139,7 @@ class RefreshTokenRouteTest {
         val algorithm = Algorithm.ECDSA256(jwkServer.getJwkProvider())
         val expiredAt = OffsetDateTime.now().minusSeconds(10).toInstant()
         coEvery { refreshTokenRepository.create(any()) } returns createdRefreshModel
-        coEvery { jwkService.findRandomJwk() } returns randomJwk
+        coEvery { jwkService.getRandomJwk() } returns randomJwk
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
         coEvery { JwtHandler.expiresAt(any(),any()) } returns expiredAt
 
@@ -165,7 +165,7 @@ class RefreshTokenRouteTest {
         assert(response.path == "/refresh-token/renewal")
 
         coVerify(exactly = 1) { refreshTokenRepository.create(any()) }
-        coVerify(exactly = 1) { jwkService.findRandomJwk() }
+        coVerify(exactly = 1) { jwkService.getRandomJwk() }
         coVerify(exactly = 1) { jwkService.convertAlgorithm(any()) }
         coVerify(exactly = 1) { JwtHandler.expiresAt(any(),any()) }
 

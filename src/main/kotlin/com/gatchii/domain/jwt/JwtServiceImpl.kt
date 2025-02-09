@@ -13,7 +13,7 @@ class JwtServiceImpl(
 ) : JwtService {
 
     override suspend fun generate(claim: Map<String, String>): String {
-        val jwk = jwkService.findRandomJwk()
+        val jwk = jwkService.getRandomJwk()
         val provider = jwkService.getProvider(jwk)
         val algorithm = jwkService.convertAlgorithm(provider)
         return JwtHandler.generate(jwtId = UUID.randomUUID().toString(), claim, algorithm, jwtConfig)

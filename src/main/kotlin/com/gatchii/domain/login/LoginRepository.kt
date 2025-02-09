@@ -9,8 +9,8 @@ import com.gatchii.domain.login.LoginTable.role
 import com.gatchii.domain.login.LoginTable.rsaUid
 import com.gatchii.domain.login.LoginTable.status
 import com.gatchii.domain.login.LoginTable.suffixId
-import com.gatchii.shared.common.Constants.Companion.EMPTY_STR
-import com.gatchii.shared.repository.ExposedCrudRepository
+import com.gatchii.common.const.Constants.Companion.EMPTY_STR
+import com.gatchii.common.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement

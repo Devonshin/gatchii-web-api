@@ -1,8 +1,8 @@
 package com.gatchii.domain.jwt
 
-import com.gatchii.shared.model.BaseModel
-import com.gatchii.shared.repository.UUID7Table
-import com.gatchii.shared.serializer.OffsetDateTimeSerializer
+import com.gatchii.common.model.BaseModel
+import com.gatchii.common.repository.UUID7Table
+import com.gatchii.common.serializer.OffsetDateTimeSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import java.time.OffsetDateTime

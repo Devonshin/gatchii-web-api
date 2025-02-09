@@ -1,4 +1,4 @@
-package com.gatchii.shared.serializer
+package com.gatchii.common.serializer
 
 import com.github.f4b6a3.uuid.UuidCreator
 import kotlinx.serialization.ExperimentalSerializationApi

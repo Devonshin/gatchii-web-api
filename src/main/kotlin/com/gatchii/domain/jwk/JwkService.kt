@@ -2,6 +2,8 @@ package com.gatchii.domain.jwk
 
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
+import java.time.Clock
+import java.time.LocalDateTime
 import java.util.*
 
 /**
@@ -11,13 +13,17 @@ import java.util.*
  */
 
 interface JwkService {
-    suspend fun findRandomJwk(): JwkModel
+    suspend fun initializeJwk(clock: LocalDateTime = LocalDateTime.now())
+    suspend fun getRandomJwk(): JwkModel
     suspend fun findJwk(id: UUID): JwkModel
     suspend fun convertAlgorithm(provider: ECDSAKeyProvider): Algorithm
     suspend fun getProvider(jwk: JwkModel): ECDSAKeyProvider
     suspend fun findAllJwk(): List<Map<String, String>>
     suspend fun deleteJwk(id: UUID)
-    suspend fun createJwk(domain: JwkModel): JwkModel
-    suspend fun createJwks(domains: List<JwkModel>): List<JwkModel>
+    suspend fun deleteJwks(jwks: List<JwkModel>)
+    suspend fun createJwk(): JwkModel
+    suspend fun taskProcessing()
+    suspend fun createJwks(size: Int): List<JwkModel>
+    suspend fun findAllUsableJwk(): List<JwkModel>
 }
 

@@ -1,6 +1,6 @@
-package com.gatchii.shared.repository
+package com.gatchii.common.repository
 
-import com.gatchii.shared.model.BaseModel
+import com.gatchii.common.model.BaseModel
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.*

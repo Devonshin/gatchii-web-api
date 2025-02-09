@@ -99,7 +99,7 @@ class RefreshTokenServiceImplTest {
             true, userId, OffsetDateTime.now(), OffsetDateTime.now(), id = UUID.randomUUID()
         )
         coEvery { refreshTokenRepository.create(any()) } returns refreshTokenModel
-        coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getRandomJwk() } returns jwkModel
         coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
 
@@ -119,7 +119,7 @@ class RefreshTokenServiceImplTest {
             refreshTokenRepository.create(any())
         }
         coVerify(exactly = 1) {
-            jwkService.findRandomJwk()
+            jwkService.getRandomJwk()
         }
         coVerify(exactly = 1) {
             jwkService.convertAlgorithm(any())
@@ -207,7 +207,7 @@ class RefreshTokenServiceImplTest {
         val newRefreshTokenModel = RefreshTokenModel(
             true, userId, now.plusMonths(1), now, id = UUID.randomUUID()
         )
-        coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getRandomJwk() } returns jwkModel
         coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
         coEvery { jwkService.findJwk(any()) } returns jwkModel
@@ -246,7 +246,7 @@ class RefreshTokenServiceImplTest {
             refreshTokenRepository.create(any())
         }
         coVerify(exactly = 2) {
-            jwkService.findRandomJwk()
+            jwkService.getRandomJwk()
         }
         coVerify(exactly = 3) {
             jwkService.getProvider(any())
@@ -274,7 +274,7 @@ class RefreshTokenServiceImplTest {
             throw JWTVerificationException("Invalid token")
         }
         coEvery { jwkService.findJwk(any()) } returns jwkModel
-        coEvery { jwkService.findRandomJwk() } returns jwkModel
+        coEvery { jwkService.getRandomJwk() } returns jwkModel
         coEvery { jwkService.getProvider(any()) } returns provider
         coEvery { jwkService.convertAlgorithm(any()) } returns algorithm
 
@@ -295,7 +295,7 @@ class RefreshTokenServiceImplTest {
             jwkService.findJwk(any())
         }
         coVerify(exactly = 1) {
-            jwkService.findRandomJwk()
+            jwkService.getRandomJwk()
         }
         coVerify(exactly = 2) {
             jwkService.getProvider(any())

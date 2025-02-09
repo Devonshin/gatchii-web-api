@@ -1,7 +1,7 @@
 package com.gatchii.domain.login
 
 import com.gatchii.plugins.JwtResponse
-import com.gatchii.shared.common.Constants.Companion.SUCCESS
+import com.gatchii.common.const.Constants.Companion.SUCCESS
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

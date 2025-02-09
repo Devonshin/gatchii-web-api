@@ -7,8 +7,8 @@ import com.gatchii.domain.rsa.RsaTable.id
 import com.gatchii.domain.rsa.RsaTable.modulus
 import com.gatchii.domain.rsa.RsaTable.privateKey
 import com.gatchii.domain.rsa.RsaTable.publicKey
-import com.gatchii.shared.exception.NotSupportMethodException
-import com.gatchii.shared.repository.ExposedCrudRepository
+import com.gatchii.common.exception.NotSupportMethodException
+import com.gatchii.common.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement

@@ -1,4 +1,4 @@
-package com.gatchii.shared.repository
+package com.gatchii.common.repository
 
 import com.gatchii.plugins.DatabaseConfig
 

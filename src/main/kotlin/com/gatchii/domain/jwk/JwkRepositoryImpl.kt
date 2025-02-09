@@ -5,7 +5,7 @@ import com.gatchii.domain.jwk.JwkTable.deletedAt
 import com.gatchii.domain.jwk.JwkTable.id
 import com.gatchii.domain.jwk.JwkTable.privateKey
 import com.gatchii.domain.jwk.JwkTable.publicKey
-import com.gatchii.shared.model.ResultData
+import com.gatchii.common.model.ResultData
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere
@@ -43,7 +43,6 @@ class JwkRepositoryImpl(override val table: JwkTable) : JwkRepository {
 
         ResultData(
             datas = results,
-            limit = limit,
             hasMoreData = maxListSize == maxResultSize
         )
     }

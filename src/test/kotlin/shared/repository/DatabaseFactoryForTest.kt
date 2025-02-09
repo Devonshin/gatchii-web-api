@@ -1,8 +1,8 @@
 package shared.repository
 
 import com.gatchii.plugins.DatabaseConfig
-import com.gatchii.shared.repository.DatabaseFactory
-import com.gatchii.shared.repository.TestDatabaseConfig
+import com.gatchii.common.repository.DatabaseFactory
+import com.gatchii.common.repository.TestDatabaseConfig
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zaxxer.hikari.util.IsolationLevel
