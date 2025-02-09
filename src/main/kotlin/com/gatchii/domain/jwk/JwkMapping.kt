@@ -1,7 +1,7 @@
 package com.gatchii.domain.jwk
 
-import com.gatchii.shared.model.BaseModel
-import com.gatchii.shared.repository.UUID7Table
+import com.gatchii.common.model.BaseModel
+import com.gatchii.common.repository.UUID7Table
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import java.time.OffsetDateTime
@@ -18,6 +18,7 @@ object JwkTable : UUID7Table(
 ) {
     val privateKey = varchar("private_key", length = 255)
     val publicKey = text("public_key")
+    val status = varchar("status", length = 10)
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
     val deletedAt: Column<OffsetDateTime?> = timestampWithTimeZone("deleted_at").nullable()
 }
@@ -25,7 +26,26 @@ object JwkTable : UUID7Table(
 data class JwkModel(
     val privateKey: String,
     val publicKey: String,
+    val status: JwkStatus = JwkStatus.ACTIVE,
     val createdAt: OffsetDateTime? = null,
     val deletedAt: OffsetDateTime? = null,
     override var id: UUID? = null,
-) : BaseModel<UUID>
+) : BaseModel<UUID> {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is JwkModel) return false
+        if (id != other.id) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id?.hashCode() ?: 0
+    }
+}
+
+enum class JwkStatus {
+    ACTIVE,
+    INACTIVE,
+    DELETED
+}

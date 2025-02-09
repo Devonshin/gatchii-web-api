@@ -1,4 +1,4 @@
-package com.gatchii.shared.model
+package com.gatchii.common.model
 
 import java.util.*
 
@@ -10,7 +10,6 @@ import java.util.*
 
 data class ResultData<T: BaseModel<UUID>> (
     val datas: List<T>,
-    val limit: Int,
     val hasMoreData: Boolean,
 ) {
     fun lastId(): UUID? {

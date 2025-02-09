@@ -67,7 +67,7 @@ class RefreshTokenServiceImpl(
                 createdAt = now
             )
         )
-        val jwk = jwkService.findRandomJwk()
+        val jwk = jwkService.getRandomJwk()
         val provider = jwkService.getProvider(jwk)
         val algorithm = jwkService.convertAlgorithm(provider)
         return JwtHandler.generate(registerToken.id.toString(), claim, algorithm, jwtConfig)

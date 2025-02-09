@@ -1,9 +1,9 @@
 package com.gatchii.domain.login
 
-import com.gatchii.shared.model.BaseModel
-import com.gatchii.shared.repository.UUID7Table
-import com.gatchii.shared.serializer.OffsetDateTimeSerializer
-import com.gatchii.shared.serializer.UUIDSerializer
+import com.gatchii.common.model.BaseModel
+import com.gatchii.common.repository.UUID7Table
+import com.gatchii.common.serializer.OffsetDateTimeSerializer
+import com.gatchii.common.serializer.UUIDSerializer
 import kotlinx.serialization.Serializable
 import org.jetbrains.annotations.NotNull
 import org.jetbrains.exposed.sql.Column

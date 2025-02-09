@@ -7,7 +7,7 @@ import com.gatchii.plugins.ErrorResponse
 import com.gatchii.plugins.JwtConfig
 import com.gatchii.plugins.JwtResponse
 import com.gatchii.plugins.securitySetup
-import com.gatchii.shared.common.Constants.Companion.SUCCESS
+import com.gatchii.common.const.Constants.Companion.SUCCESS
 import shared.repository.DatabaseFactoryForTest
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.typesafe.config.ConfigFactory

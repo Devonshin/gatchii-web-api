@@ -4,7 +4,6 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.gatchii.domain.jwk.JwkModel
 import com.gatchii.domain.jwk.JwkService
 import com.gatchii.plugins.JwtConfig
-import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.*
 import io.ktor.util.*
@@ -12,12 +11,10 @@ import io.ktor.util.logging.*
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
 import shared.common.UnitTest
-import java.security.Security
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.BeforeTest
@@ -79,7 +76,7 @@ class JwtServiceImplTest {
     @BeforeTest
     fun setup() {
         coEvery {
-            jwkService.findRandomJwk()
+            jwkService.getRandomJwk()
         } returns randomJwk
         coEvery {
             jwkService.getProvider(any())

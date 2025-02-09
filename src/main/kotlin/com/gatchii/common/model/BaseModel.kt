@@ -1,4 +1,4 @@
-package com.gatchii.shared.model
+package com.gatchii.common.model
 
 /**
  * Package: com.gatchii.shared.model

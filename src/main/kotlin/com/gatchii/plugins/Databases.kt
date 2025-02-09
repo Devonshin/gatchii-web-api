@@ -2,7 +2,7 @@ package com.gatchii.plugins
 
 import com.gatchii.domain.login.LoginTable
 import com.gatchii.domain.rsa.RsaTable
-import com.gatchii.shared.repository.DatabaseFactoryImpl
+import com.gatchii.common.repository.DatabaseFactoryImpl
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger

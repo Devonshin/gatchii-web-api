@@ -1,4 +1,4 @@
-package com.gatchii.shared.serializer
+package com.gatchii.common.serializer
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer

@@ -1,18 +1,19 @@
-package com.gatchii.shared.common
+package com.gatchii.common.task
 
 import io.ktor.util.logging.*
 
 class OnetimeTaskHandler(
-    private val taskName: String,
+    taskName: String,
     private val task: () -> Unit
-): TaskLeadHandler() {
+): TaskLeadHandler(taskName) {
+
     private val logger = KtorSimpleLogger(this::class.simpleName?: "OnetimeTaskLeadHandler")
     init {
         logger.info("OnetimeTaskHandler init")
     }
     private var isDone = false
 
-    override fun doTask() {
+    override fun startTask() {
         if(isDone) return
         task()
         afterTaskSuccess()
@@ -21,10 +22,6 @@ class OnetimeTaskHandler(
     fun afterTaskSuccess() {
         isDone = true
         removeTask(taskName)
-    }
-
-    override fun taskName(): String {
-        return taskName
     }
 
 }

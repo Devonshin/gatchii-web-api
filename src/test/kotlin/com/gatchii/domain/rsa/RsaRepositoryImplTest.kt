@@ -1,6 +1,6 @@
 package com.gatchii.domain.rsa;
 
-import com.gatchii.shared.exception.NotSupportMethodException
+import com.gatchii.common.exception.NotSupportMethodException
 import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRsaQueryList
 import com.gatchii.utils.RsaPairHandler

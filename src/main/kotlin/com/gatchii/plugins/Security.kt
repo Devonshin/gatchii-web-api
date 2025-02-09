@@ -1,7 +1,7 @@
 package com.gatchii.plugins
 
 import com.auth0.jwk.JwkProviderBuilder
-import com.gatchii.shared.common.Constants.Companion.USER_UID
+import com.gatchii.common.const.Constants.Companion.USER_UID
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,7 +15,7 @@ import java.security.Security
 import java.time.OffsetDateTime
 import java.util.concurrent.TimeUnit
 
-val logger: Logger = KtorSimpleLogger("com.gatchii.plugins.Security")
+private val logger: Logger = KtorSimpleLogger("com.gatchii.plugins.Security")
 
 fun Application.configureSecurity() {
 

@@ -1,4 +1,4 @@
-package com.gatchii.shared.exception
+package com.gatchii.common.exception
 
 /**
  * Package: com.gatchii.domains.login

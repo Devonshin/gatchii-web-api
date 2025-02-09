@@ -5,7 +5,7 @@ import com.gatchii.domain.jwt.RefreshTokenService
 import com.gatchii.domain.rsa.RsaModel
 import com.gatchii.domain.rsa.RsaService
 import com.gatchii.plugins.JwtConfig
-import com.gatchii.shared.exception.NotFoundUserException
+import com.gatchii.common.exception.NotFoundUserException
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.gatchii.utils.JwtHandler
 import com.gatchii.utils.RsaPairHandler

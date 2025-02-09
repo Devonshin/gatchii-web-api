@@ -1,6 +1,6 @@
 package com.gatchii.domain.jwk
 
-import com.gatchii.shared.exception.NotSupportMethodException
+import com.gatchii.common.exception.NotSupportMethodException
 import com.gatchii.utils.ECKeyPairHandler
 import io.ktor.util.*
 import io.ktor.util.logging.*
