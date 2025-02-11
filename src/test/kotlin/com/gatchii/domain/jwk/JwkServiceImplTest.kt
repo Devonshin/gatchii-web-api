@@ -251,7 +251,9 @@ class JwkServiceImplTest {
         // given
         //val testDispatcher = StandardTestDispatcher(testScheduler)
         //val testScope = CoroutineScope(testDispatcher)
-        val taskHandler = { task: () -> Unit ->
+        val totalDays = 30
+        DateUtil.initTestDate("testJwkServiceJob30DayTask")
+        val taskHandlerProvider = { task: () -> Unit ->
             RoutineTaskHandler(
                 taskName = taskName,
                 scheduleExpression = RoutineScheduleExpression(3, 0, 0), //0h 0m 0s
@@ -261,24 +263,23 @@ class JwkServiceImplTest {
             )
         }
         mockkObject(DateUtil)
-        val jwkService = JwkServiceImpl(jwkRepository, taskHandler)
+        val jwkService = JwkServiceImpl(jwkRepository, taskHandlerProvider)
         JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
         val maxCapacity = JwkHandler.getConfigValue("maxCapacity")?.toInt() ?: 10
         val expireTimeSec = JwkHandler.getConfigValue("expireTimeSec")?.toInt()?.times(10) //10일
-        val durationMills = 30 * 24 * 60 * 60 * 1000L // 30일
-
-        var countDay = 0L
-        coEvery { jwkRepository.create(any()) } answers {
+        val durationMills = totalDays * 24 * 60 * 60 * 1000L // 30일
+        coEvery {
+            jwkRepository.create(any())
+        } answers {
             JwkModel(
                 privateKey = "privateKey",
                 publicKey = "publicKey",
-                createdAt = OffsetDateTime.now().plusDays(countDay++),
+                createdAt = OffsetDateTime.now(DateUtil.getTestDate("testJwkServiceJob30DayTask")),
                 id = UUID.randomUUID()
             )
         }
-        var countDate = 0L
         coEvery { DateUtil.getCurrentDate() } answers {
-            OffsetDateTime.now().plusDays(countDate++)
+            OffsetDateTime.now(DateUtil.getTestDate("testJwkServiceJob30DayTask"))
         }
         coEvery { jwkRepository.delete(any<UUID>()) } returns Unit
         coEvery { jwkRepository.getAllUsable(null, true, any(), false) } returns ResultData(
@@ -300,10 +301,11 @@ class JwkServiceImplTest {
         val inactiveJwks = JwkHandler.getInactiveJwks()
         val discardJwks = JwkHandler.getDiscardJwks()
 
-        assert(jwks.size == 10)
+        assert(activeJwks.size + inactiveJwks.size + discardJwks.size == totalDays)
+        assert(jwks.size == activeJwks.size + inactiveJwks.size)
         assert(inactiveJwks.size == jwks.size - activeJwks.size)
         assert(activeJwks.size == maxCapacity)
-        assert(discardJwks.size == 20)
+        assert(discardJwks.size == totalDays - maxCapacity - inactiveJwks.size)
         //assert(discardJwks.size == shouldRemoveJwks.size)
         //coVerify(exactly = 10) { jwkRepository.delete(any<UUID>()) }
         //coVerify(exactly = 30) { jwkRepository.create(any()) }

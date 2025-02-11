@@ -113,7 +113,7 @@ class JwkHandler {
                 activeJwks.removeIf { it.id == jwk.id }
                 inactiveJwks.removeIf { it.id == jwk.id }
                 addDiscardJwk(jwk)
-                logger.debug("activeJwks.size = ${activeJwks.size}, inactiveJwks.size = ${inactiveJwks.size}, maxCapacity = $maxCapacity, addJwk: ${jwk.id}, removeJwk: ${jwk.id}")
+                logger.debug("activeJwks.size = ${activeJwks.size}, inactiveJwks.size = ${inactiveJwks.size}, discardJwks.size = ${discardJwks.size}, maxCapacity = $maxCapacity, removeJwk: ${jwk.id}")
             }
         }
 
