@@ -26,6 +26,8 @@ class RoutineTaskHandler(
     private val oneDaySec: Long = 24 * 60 * 60L
     var delayTimeSec = 0L
     var isExecuteImmediate = false;
+    val isTest = taskName.startsWith("test")
+
     init {
         logger.info("ZoneId.systemDefault : ${ZoneId.systemDefault()}")
     }
@@ -38,14 +40,14 @@ class RoutineTaskHandler(
 
     suspend fun jobProcessing() {
         val currentTime = getTime(taskName, delayTimeSec.toLong())
-        logger.debug("now : {}", currentTime)
+        logger.info("now : {}", currentTime)
         val currentTimeSec = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000
         val scheduleTime = getScheduleTime(currentTime)
         val scheduleTimeSec = scheduleTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000
-        logger.debug("scheduleTime : ${scheduleTime}, currentTime : ${currentTime} = ${DateUtil.formatSecondsToNaturalTime(currentTimeSec - scheduleTimeSec)}")
-        if ((currentTimeSec - scheduleTimeSec) < 30) { // 설정 시간이 현재 시간 이전이면 바로 작업 수행, 30초 차이는 용인
+        logger.info("scheduleTime : ${scheduleTime}, currentTime : ${currentTime} = ${DateUtil.formatSecondsToNaturalTime(abs(scheduleTimeSec - currentTimeSec))}")
+        if (abs(currentTimeSec - scheduleTimeSec) < 30) { // 설정 시간이 현재 시간 이전이면 바로 작업 수행, 30초 차이는 용인
             task()
-            logger.info("Task execute.")
+            logger.info("Task execute. currentTimeSec - scheduleTimeSec = ${currentTimeSec - scheduleTimeSec}")
             delayTimeSec = period
         } else {
             val remainSec = abs(scheduleTimeSec - currentTimeSec)  // 설정 시간까지 남은 시간 계산
@@ -60,7 +62,7 @@ class RoutineTaskHandler(
                 remainSec //2시 설정이고 현재 1시라면 1시간 더 대기
             }
         }
-        logger.debug("Task remain : ${DateUtil.formatSecondsToNaturalTime(delayTimeSec)}")
+        logger.info("Task remain : ${DateUtil.formatSecondsToNaturalTime(delayTimeSec)}")
         delay(delayTimeSec * 1000) // 남은 시간 추가 대기
     }
 
@@ -71,9 +73,9 @@ class RoutineTaskHandler(
 
     private fun getTime(taskName: String, plusSec: Long): LocalDateTime {
         val now = LocalDateTime.now()
-        if (taskName.startsWith("test")) {
-            logger.debug("getTime for Test will return now plus ${DateUtil.formatSecondsToNaturalTime(plusSec)} ")
-            return now.plusSeconds(plusSec)
+        if (isTest) {
+            logger.info("getTime for Test will return now plus ${DateUtil.formatSecondsToNaturalTime(plusSec)}")
+            return LocalDateTime.now(DateUtil.applyTestDateCount("testJwkServiceJob30DayTask", plusSec * 1000L))
         }
         return now
     }

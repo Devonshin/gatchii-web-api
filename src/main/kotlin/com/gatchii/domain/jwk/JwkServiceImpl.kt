@@ -34,6 +34,17 @@ class JwkServiceImpl (
         task.stopTask()
     }
 
+    //jwk 1개 추가, active를 inactive로 변경, 제거
+    override suspend fun taskProcessing() {
+        val createdJwk = createJwk()
+        JwkHandler.addJwk(createdJwk)
+        JwkHandler.getRemovalJwks()
+            .forEach { jwk ->
+                logger.info("delete jwk : {}", jwk.id.toString())
+                deleteJwk(jwk.id!!)
+            }
+    }
+
     //초기화
     override suspend fun initializeJwk(time: LocalDateTime) {
         val allUsableJwks = findAllUsableJwk()
@@ -42,7 +53,7 @@ class JwkServiceImpl (
             JwkHandler.addJwk(jwkModel)
         }
         task = taskHandlerProvider {
-            logger.info("call taskProcessing.. ")
+            logger.info("call JwkServiceImpl.taskProcessing.. ")
             runBlocking {
                 taskProcessing()
             }
@@ -146,18 +157,5 @@ class JwkServiceImpl (
         return jwkRepository.batchCreate(jwks)
     }
 
-    //jwk 1개 추가, active를 inactive로 변경, 제거
-    override suspend fun taskProcessing() {
-        logger.debug("jwkSchedulingProc start")
-        val createdJwk = createJwk()
-        JwkHandler.addJwk(createdJwk)
-        JwkHandler.getRemovalJwks()
-            .forEach { jwk ->
-                logger.debug("delete jwk : {}", jwk.id.toString())
-                deleteJwk(jwk.id!!)
-            }
-
-        logger.debug("jwkSchedulingProc end")
-    }
 }
 
