@@ -1,14 +1,13 @@
 package com.gatchii.common.task
 
+import com.gatchii.utils.DateUtil
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import shared.common.UnitTest
-import java.time.LocalDateTime
-import kotlin.test.assertFailsWith
 
 /**
  * Test class for the `RoutineTaskHandler` class.
@@ -20,6 +19,11 @@ import kotlin.test.assertFailsWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @UnitTest
 class RoutineTaskHandlerTest {
+
+    @BeforeEach
+    fun setUp() {
+        DateUtil.initTestDate("RoutineTaskHandler")
+    }
 
     //
     @Test

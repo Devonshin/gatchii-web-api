@@ -38,11 +38,13 @@ class DateUtil {
             return OffsetDateTime.now()
         }
 
-        fun formatSecondsToNaturalTime(totalSeconds: Long): String {
-            val hours = totalSeconds / 3600
+        fun toReaderbleTimeFromSeconds(totalSeconds: Long): String {
+            if(totalSeconds < 0) throw IllegalArgumentException()
+            val day = totalSeconds / (3600 * 24)
+            val hours = (totalSeconds % (3600 * 24)) / 3600
             val minutes = (totalSeconds % 3600) / 60
             val seconds = totalSeconds % 60
-            return "${hours}시간 ${minutes}분 ${seconds}초"
+            return "${day}일 ${hours}시간 ${minutes}분 ${seconds}초"
         }
 
     }

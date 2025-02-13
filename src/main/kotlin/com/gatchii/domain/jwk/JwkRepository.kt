@@ -57,7 +57,7 @@ interface JwkRepository : ExposedCrudRepository<JwkTable, JwkModel, UUID> {
             id = row[id].value,
             privateKey = row[privateKey],
             publicKey = row[publicKey],
-            status = JwkStatus.valueOf(row[status]),
+            status = JwkStatus.fromValue(row[status]),
             createdAt = row.getOrNull(createdAt),
             deletedAt = row.getOrNull(deletedAt)
         )

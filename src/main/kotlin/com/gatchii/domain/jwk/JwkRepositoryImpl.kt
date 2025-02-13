@@ -4,6 +4,7 @@ import com.gatchii.domain.jwk.JwkTable.createdAt
 import com.gatchii.domain.jwk.JwkTable.deletedAt
 import com.gatchii.domain.jwk.JwkTable.id
 import com.gatchii.domain.jwk.JwkTable.privateKey
+import com.gatchii.domain.jwk.JwkTable.status
 import com.gatchii.domain.jwk.JwkTable.publicKey
 import com.gatchii.common.model.ResultData
 import org.jetbrains.exposed.sql.Query
@@ -28,7 +29,7 @@ class JwkRepositoryImpl(override val table: JwkTable) : JwkRepository {
 
     override fun getAllUsable(lastId: UUID?, forward: Boolean, limit: Int, withDeleted: Boolean): ResultData<JwkModel> = dbQuery {
         val query = table.select(
-            id, publicKey, privateKey, createdAt, deletedAt
+            id, publicKey, privateKey, status, createdAt, deletedAt
         )
 
         applyWhereConditions(query, lastId, forward, withDeleted)

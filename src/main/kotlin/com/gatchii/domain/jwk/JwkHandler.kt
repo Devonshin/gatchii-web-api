@@ -26,6 +26,10 @@ class JwkHandler {
         private var inactiveJwks: MutableList<JwkModel> = mutableListOf()
         private var discardJwks: MutableList<JwkModel> = mutableListOf()
 
+        fun printConfig() {
+            logger.info("maxCapacity = $maxCapacity, expireTimeSec = ${DateUtil.toReaderbleTimeFromSeconds(expireTimeSec)}")
+        }
+
         //application*.conf 를 override 한다
         fun setConfig(config: Config) {
             jwkConfig = config
@@ -99,7 +103,7 @@ class JwkHandler {
         fun getRemovalJwks(): List<JwkModel> {
             val expireDate =
                 DateUtil.getCurrentDate().minusSeconds(expireTimeSec)
-            logger.debug("ExpireDate = $expireDate,  expireTimeSec = ${DateUtil.formatSecondsToNaturalTime(expireTimeSec)}")
+            logger.debug("ExpireDate = $expireDate,  expireTimeSec = ${DateUtil.toReaderbleTimeFromSeconds(expireTimeSec)}")
             return inactiveJwks.filter {
                 it.createdAt!!.isBefore(expireDate)
             }.apply {
