@@ -40,11 +40,10 @@ class RoutineTaskHandler(
 
     suspend fun jobProcessing() {
         val currentTime = getTime(taskName, delayTimeSec.toLong())
-        logger.info("now : {}", currentTime)
         val currentTimeSec = currentTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000
         val scheduleTime = getScheduleTime(currentTime)
         val scheduleTimeSec = scheduleTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000
-        logger.info("scheduleTime : ${scheduleTime}, currentTime : ${currentTime} = ${DateUtil.formatSecondsToNaturalTime(abs(scheduleTimeSec - currentTimeSec))}")
+        logger.info("ScheduleTime : ${scheduleTime}, CurrentTime : ${currentTime} = ${DateUtil.toReaderbleTimeFromSeconds(abs(scheduleTimeSec - currentTimeSec))}")
         if (abs(currentTimeSec - scheduleTimeSec) < 30) { // 설정 시간이 현재 시간 이전이면 바로 작업 수행, 30초 차이는 용인
             task()
             logger.info("Task execute. currentTimeSec - scheduleTimeSec = ${currentTimeSec - scheduleTimeSec}")
@@ -62,7 +61,7 @@ class RoutineTaskHandler(
                 remainSec //2시 설정이고 현재 1시라면 1시간 더 대기
             }
         }
-        logger.info("Task remain : ${DateUtil.formatSecondsToNaturalTime(delayTimeSec)}")
+        logger.info("Task remain : ${DateUtil.toReaderbleTimeFromSeconds(delayTimeSec)}")
         delay(delayTimeSec * 1000) // 남은 시간 추가 대기
     }
 
@@ -74,8 +73,8 @@ class RoutineTaskHandler(
     private fun getTime(taskName: String, plusSec: Long): LocalDateTime {
         val now = LocalDateTime.now()
         if (isTest) {
-            logger.info("getTime for Test will return now plus ${DateUtil.formatSecondsToNaturalTime(plusSec)}")
-            return LocalDateTime.now(DateUtil.applyTestDateCount("testJwkServiceJob30DayTask", plusSec * 1000L))
+            logger.info("getTime for Test will return now plus ${DateUtil.toReaderbleTimeFromSeconds(plusSec)}")
+            return LocalDateTime.now(DateUtil.applyTestDateCount("RoutineTaskHandler", plusSec * 1000L))
         }
         return now
     }

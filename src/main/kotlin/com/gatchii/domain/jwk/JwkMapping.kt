@@ -18,7 +18,7 @@ object JwkTable : UUID7Table(
 ) {
     val privateKey = varchar("private_key", length = 255)
     val publicKey = text("public_key")
-    val status = varchar("status", length = 10)
+    val status = varchar("status", length = 10).nullable()
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
     val deletedAt: Column<OffsetDateTime?> = timestampWithTimeZone("deleted_at").nullable()
 }
@@ -47,5 +47,12 @@ data class JwkModel(
 enum class JwkStatus {
     ACTIVE,
     INACTIVE,
-    DELETED
+    DELETED;
+
+    companion object {
+        fun fromValue(value: String?): JwkStatus {
+            if (value == null) return INACTIVE
+            return JwkStatus.valueOf(value.uppercase())
+        }
+    }
 }

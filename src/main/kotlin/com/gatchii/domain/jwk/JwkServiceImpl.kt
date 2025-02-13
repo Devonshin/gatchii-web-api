@@ -3,6 +3,7 @@ package com.gatchii.domain.jwk
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
 import com.gatchii.common.task.TaskLeadHandler
+import com.gatchii.config.GlobalConfig
 import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
@@ -14,20 +15,29 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import java.security.interfaces.ECPrivateKey
 import java.security.interfaces.ECPublicKey
-import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.jvm.optionals.getOrElse
 
 /** Package: com.gatchii.domains.jwk Created: Devonshin Date: 16/09/2024 */
 
-class JwkServiceImpl (
+class JwkServiceImpl(
     private val jwkRepository: JwkRepository,
     private val taskHandlerProvider: (() -> Unit) -> TaskLeadHandler,
 ) : JwkService {
 
     private val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServiceImpl")
     lateinit var task: TaskLeadHandler
+
+    init {
+        val envVal = GlobalConfig.getConfigedValue("ktor.environment")
+        logger.info("Application envVal : $envVal")
+        if (!envVal.equals("test", ignoreCase = true)) {
+            runBlocking {
+                initializeJwk()
+            }
+        }
+    }
 
     fun stopTask() {
         logger.info("stopTask called..")
@@ -46,11 +56,19 @@ class JwkServiceImpl (
     }
 
     //초기화
-    override suspend fun initializeJwk(time: LocalDateTime) {
-        val allUsableJwks = findAllUsableJwk()
+    override suspend fun initializeJwk() {
+        val allUsableJwks: List<JwkModel> = findAllUsableJwk()
         logger.info("allUsableJwks size : ${allUsableJwks.size} ")
-        for (jwkModel in allUsableJwks) {
-            JwkHandler.addJwk(jwkModel)
+        if (allUsableJwks.isEmpty()) {
+            val createdJwks = createJwks(JwkHandler.jwkMaxCapacity())
+            for (model in createdJwks) {
+                JwkHandler.addJwk(model)
+            }
+            logger.info("New create allUsableJwks size : ${allUsableJwks.size} ")
+        } else {
+            for (jwkModel in allUsableJwks) {
+                JwkHandler.addJwk(jwkModel)
+            }
         }
         task = taskHandlerProvider {
             logger.info("call JwkServiceImpl.taskProcessing.. ")

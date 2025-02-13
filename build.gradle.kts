@@ -24,7 +24,10 @@ version = "0.0.1"
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
     val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs = listOf(
+        "-Dio.ktor.development=$isDevelopment",
+        "-Dconfig.resource=application-test.conf"
+    )
 }
 
 repositories {
@@ -88,6 +91,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("config.resource", "application-test.conf")
 }
 
 tasks.register("unitTest", Test::class) {
@@ -96,6 +100,7 @@ tasks.register("unitTest", Test::class) {
     useJUnitPlatform {
         includeTags("unitTest")
     }
+    systemProperty("config.resource", "application-test.conf")
 }
 
 tasks.register("integrationTest", Test::class) {
@@ -104,6 +109,7 @@ tasks.register("integrationTest", Test::class) {
     useJUnitPlatform {
         includeTags("integrationTest")
     }
+    systemProperty("config.resource", "application-test.conf")
 }
 tasks.processResources {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

@@ -3,6 +3,7 @@ package com.gatchii.plugins
 import com.gatchii.domain.login.LoginTable
 import com.gatchii.domain.rsa.RsaTable
 import com.gatchii.common.repository.DatabaseFactoryImpl
+import com.gatchii.domain.jwk.JwkTable
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -51,7 +52,8 @@ private fun initData() {
 
 val tables = arrayOf(
     LoginTable,
-    RsaTable
+    RsaTable,
+    JwkTable
 )
 
 data class DatabaseConfig(

@@ -13,7 +13,7 @@ import java.util.*
  */
 
 interface JwkService {
-    suspend fun initializeJwk(clock: LocalDateTime = LocalDateTime.now())
+    suspend fun initializeJwk()
     suspend fun getRandomJwk(): JwkModel
     suspend fun findJwk(id: UUID): JwkModel
     suspend fun convertAlgorithm(provider: ECDSAKeyProvider): Algorithm

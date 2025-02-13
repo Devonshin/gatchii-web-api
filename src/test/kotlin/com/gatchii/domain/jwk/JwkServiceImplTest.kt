@@ -11,29 +11,30 @@ import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
 import com.typesafe.config.ConfigFactory
+import io.ktor.server.config.HoconApplicationConfig
 import io.ktor.util.*
 import io.ktor.util.logging.*
 import io.mockk.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.Clock
-import java.time.Instant
+import shared.common.UnitTest
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.*
 import kotlin.test.BeforeTest
 
+@UnitTest
 class JwkServiceImplTest {
 
     val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServiceImplTest")
+    val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
     val jwkRepository = mockk<JwkRepository>()
     val taskName = "testJwkTask"
     lateinit var jwkService: JwkServiceImpl
@@ -77,7 +78,11 @@ class JwkServiceImplTest {
     @Test
     fun `test findRandomJwk returns jwk when usable jwks are found`() = runTest {
         // given
-        val jwk = mockk<JwkModel>()
+        val jwk = mockk<JwkModel>() {
+            coEvery { id } returns UUID.randomUUID()
+
+            coEvery { status } returns JwkStatus.ACTIVE
+        }
         JwkHandler.addJwk(jwk)
         // when
         val result = jwkService.getRandomJwk()
@@ -202,9 +207,13 @@ class JwkServiceImplTest {
     fun `test jwkSchedulingProc deletes removable jwks`() = runTest {
         // given
         mockkObject(JwkHandler)
-        val createdJwk = mockk<JwkModel>()
-        val removableJwk = mockk<JwkModel>(relaxed = true) {
+        val createdJwk = mockk<JwkModel> {
             coEvery { id } returns UUID.randomUUID()
+            coEvery { status } returns JwkStatus.ACTIVE
+        }
+        val removableJwk = mockk<JwkModel> {
+            coEvery { id } returns UUID.randomUUID()
+            coEvery { status } returns JwkStatus.DELETED
         }
         coEvery { jwkRepository.create(any()) } returns createdJwk
         coEvery { JwkHandler.getRemovalJwks() } returns listOf(removableJwk)
@@ -252,11 +261,18 @@ class JwkServiceImplTest {
         //val testDispatcher = StandardTestDispatcher(testScheduler)
         //val testScope = CoroutineScope(testDispatcher)
         val totalDays = 30
-        DateUtil.initTestDate("testJwkServiceJob30DayTask")
+        val routineScheduleExpression = RoutineScheduleExpression(3, 0, 0)
+        val now = LocalDateTime.now()
+        val totalJwkSize = if (now.withHour(routineScheduleExpression.hour).isAfter(now)) {
+            totalDays
+        } else {
+            totalDays + 1
+        }
+        DateUtil.initTestDate("RoutineTaskHandler")
         val taskHandlerProvider = { task: () -> Unit ->
             RoutineTaskHandler(
                 taskName = taskName,
-                scheduleExpression = RoutineScheduleExpression(3, 0, 0), //0h 0m 0s
+                scheduleExpression = routineScheduleExpression, //0h 0m 0s
                 task = task,
                 period = 24 * 60 * 60L,
                 this
@@ -274,13 +290,14 @@ class JwkServiceImplTest {
             JwkModel(
                 privateKey = "privateKey",
                 publicKey = "publicKey",
-                createdAt = OffsetDateTime.now(DateUtil.getTestDate("testJwkServiceJob30DayTask")),
+                createdAt = OffsetDateTime.now(DateUtil.getTestDate("RoutineTaskHandler")),
                 id = UUID.randomUUID()
             )
         }
         coEvery { DateUtil.getCurrentDate() } answers {
-            OffsetDateTime.now(DateUtil.getTestDate("testJwkServiceJob30DayTask"))
+            OffsetDateTime.now(DateUtil.getTestDate("RoutineTaskHandler"))
         }
+        coEvery { jwkRepository.batchCreate(any()) } returns listOf()
         coEvery { jwkRepository.delete(any<UUID>()) } returns Unit
         coEvery { jwkRepository.getAllUsable(null, true, any(), false) } returns ResultData(
             datas = listOf(),
@@ -301,14 +318,13 @@ class JwkServiceImplTest {
         val inactiveJwks = JwkHandler.getInactiveJwks()
         val discardJwks = JwkHandler.getDiscardJwks()
 
-        assert(activeJwks.size + inactiveJwks.size + discardJwks.size == totalDays)
+        assert(activeJwks.size + inactiveJwks.size + discardJwks.size == totalJwkSize)
         assert(jwks.size == activeJwks.size + inactiveJwks.size)
         assert(inactiveJwks.size == jwks.size - activeJwks.size)
         assert(activeJwks.size == maxCapacity)
-        assert(discardJwks.size == totalDays - maxCapacity - inactiveJwks.size)
-        //assert(discardJwks.size == shouldRemoveJwks.size)
-        //coVerify(exactly = 10) { jwkRepository.delete(any<UUID>()) }
-        //coVerify(exactly = 30) { jwkRepository.create(any()) }
+        assert(discardJwks.size == totalJwkSize - maxCapacity - inactiveJwks.size)
+        coVerify(exactly = discardJwks.size) { jwkRepository.delete(any<UUID>()) }
+        coVerify(exactly = totalJwkSize) { jwkRepository.create(any()) }
         unmockkObject(DateUtil)
     }
 }

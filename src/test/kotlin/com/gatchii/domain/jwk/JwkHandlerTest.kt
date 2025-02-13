@@ -334,26 +334,6 @@ class JwkHandlerTest {
         assertFalse(JwkHandler.getJwks().any { it.id == newJwk.id })
     }
 
-    // Test if removeJwks does not remove active jwks that are not marked as deleted
-    @Test
-    fun test_removeJwks_does_not_remove_active_jwks_that_are_not_marked_as_deleted() = runTest {
-        // given
-        JwkHandler.clearAll()
-        val newJwk = JwkModel(
-            privateKey = "privateKey1",
-            publicKey = "publicKey1",
-            createdAt = OffsetDateTime.now(),
-            id = UUID.randomUUID()
-        )
-        JwkHandler.addJwk(newJwk)
-
-        // when
-        JwkHandler.removeJwks(listOf(newJwk))
-
-        // then
-        assertTrue(JwkHandler.getJwks().any { it.id == newJwk.id })
-    }
-
     // Test if removeJwks removes inactive jwks that are marked as deleted
     @Test
     fun test_removeJwks_removes_inactive_jwks_that_are_marked_as_deleted() = runTest {
@@ -377,20 +357,27 @@ class JwkHandlerTest {
 
     // Test if removeJwks does not remove inactive jwks that are not marked as deleted
     @Test
-    fun test_removeJwks_does_not_remove_inactive_jwks_that_are_not_marked_as_deleted() = runTest {
+    fun test_removeJwks_remove_inactive_jwk() = runTest {
         // given
         JwkHandler.clearAll()
-        val newJwk = JwkModel(
+        val activeNewJwk = JwkModel(
             privateKey = "privateKey1",
             publicKey = "publicKey1",
             createdAt = OffsetDateTime.now(),
             id = UUID.randomUUID()
         )
-        JwkHandler.addInactiveJwk(newJwk)
+        val inactiveNewJwk = JwkModel(
+            privateKey = "privateKey1",
+            publicKey = "publicKey1",
+            createdAt = OffsetDateTime.now(),
+            id = UUID.randomUUID()
+        )
+        JwkHandler.addInactiveJwk(inactiveNewJwk)
+        JwkHandler.addJwk(activeNewJwk)
         // when
-        JwkHandler.removeJwks(listOf(newJwk))
+        JwkHandler.removeJwks(listOf(activeNewJwk, inactiveNewJwk))
         // then
-        assertTrue(JwkHandler.getJwks().any { it.id == newJwk.id })
+        assertFalse (JwkHandler.getJwks().any { it.id == activeNewJwk.id || it.id == inactiveNewJwk.id })
     }
 
 
