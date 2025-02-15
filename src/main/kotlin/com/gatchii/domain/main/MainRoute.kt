@@ -17,7 +17,7 @@ fun Route.mainRoute() {
 
     val logger: Logger = KtorSimpleLogger(this::class.simpleName?:"MainRoute")
 
-    get(Regex("/?")) {
+    get(Regex("")) {
         logger.info("Main")
         call.respond("Hello World! This is main page")
     }

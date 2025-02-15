@@ -39,3 +39,4 @@ private/
 .DS_Store
 
 logs/
+/secret/

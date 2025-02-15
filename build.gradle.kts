@@ -12,7 +12,7 @@ val ktorVersion: String by project
 plugins {
     kotlin("jvm") version "2.1.0"
     id("io.ktor.plugin") version "2.3.13"
-    //id("io.ktor.plugin") version "3.0.0"
+    //id("io.ktor.plugin") version "3.1.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("idea")
     kotlin("plugin.power-assert") version "2.0.0"
@@ -23,11 +23,26 @@ version = "0.0.1"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
-    val isDevelopment: Boolean = project.ext.has("development")
-    applicationDefaultJvmArgs = listOf(
-        "-Dio.ktor.development=$isDevelopment",
-        "-Dconfig.resource=application-test.conf"
-    )
+    val isDevelopment: Boolean = project.ext.has("dev") || project.ext.has("development")
+    val isTest: Boolean = project.ext.has("test")
+    val isLocal: Boolean = project.ext.has("local")
+    if (isDevelopment) {
+        applicationDefaultJvmArgs = listOf(
+            "-Dio.ktor.development=$isDevelopment",
+            "-Dconfig.resource=application-dev.conf"
+        )
+    } else if (isTest) {
+        applicationDefaultJvmArgs = listOf(
+            "-Dio.ktor.development=$isDevelopment",
+            "-Dconfig.resource=application-test.conf"
+        )
+    } else if (isLocal) {
+        applicationDefaultJvmArgs = listOf(
+            "-Dio.ktor.development=$isDevelopment",
+            "-Dconfig.resource=application-local.conf"
+        )
+    }
+
 }
 
 repositories {
@@ -65,6 +80,7 @@ dependencies {
     implementation("com.h2database:h2:$h2Version")
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.ktor:ktor-server-config-yaml")
     // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on

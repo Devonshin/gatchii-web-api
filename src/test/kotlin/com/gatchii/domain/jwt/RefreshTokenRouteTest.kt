@@ -12,9 +12,11 @@ import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.server.application.install
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
+import io.ktor.server.plugins.doublereceive.DoubleReceive
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.*
@@ -82,6 +84,7 @@ class RefreshTokenRouteTest {
         environment {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
+        install(DoubleReceive)
         install(Authentication) {
             jwt("refresh-jwt") {
                 securitySetup(

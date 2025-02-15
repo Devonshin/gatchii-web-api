@@ -1,8 +1,12 @@
 package com.gatchii.utils
 
+import com.gatchii.config.GlobalConfig
+import io.ktor.util.encodeBase64
+import io.ktor.util.logging.KtorSimpleLogger
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import shared.common.UnitTest
+import java.io.File
 import kotlin.test.assertEquals
 
 /**
@@ -13,6 +17,9 @@ import kotlin.test.assertEquals
 
 @UnitTest
 class RsaPairGeneratorUnitTest {
+
+    val logger = KtorSimpleLogger("RsaPairGeneratorUnitTest")
+
 
     companion object {
         private lateinit var generateRsaPair: RsaKeyDataPair
@@ -54,4 +61,16 @@ class RsaPairGeneratorUnitTest {
         //then
         assertEquals(textPlain, decrypt)
     }
+
+    /*@Test
+    fun generateRsaPubPrvFile() {
+        val secretPath = GlobalConfig.getConfigedValue("ktor.secret.path")
+        val canonicalPath = File(".").canonicalPath
+
+        logger.info("secretPath: $secretPath, canonicalPath = $canonicalPath")
+        val rsaKeyPair = RsaPairHandler.generateRSAKeyPair()
+        FileUtil.writeFile("$secretPath/public.pem", "-----BEGIN RSA PUBLIC KEY-----" + rsaKeyPair.public.encoded.encodeBase64() + "-----END RSA PUBLIC KEY-----")
+        FileUtil.writeFile("$secretPath/private.pem", "-----BEGIN RSA PRIVATE KEY-----" + rsaKeyPair.private.encoded.encodeBase64() + "-----END RSA PRIVATE KEY-----")
+    }*/
+
 }

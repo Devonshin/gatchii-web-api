@@ -1,26 +1,35 @@
 package com.gatchii.domain.login
 
+import com.gatchii.common.const.Constants.Companion.SUCCESS
+import com.gatchii.common.exception.NotFoundUserException
 import com.gatchii.domain.jwt.AccessToken
 import com.gatchii.domain.jwt.JwtModel
 import com.gatchii.domain.jwt.RefreshToken
 import com.gatchii.plugins.ErrorResponse
 import com.gatchii.plugins.JwtConfig
 import com.gatchii.plugins.JwtResponse
+import com.gatchii.plugins.configureSecurity
+import com.gatchii.plugins.configureSerialization
+import com.gatchii.plugins.configureStatusPages
+import com.gatchii.plugins.configureValidation
 import com.gatchii.plugins.securitySetup
-import com.gatchii.common.const.Constants.Companion.SUCCESS
-import shared.repository.DatabaseFactoryForTest
 import com.gatchii.utils.BCryptPasswordEncoder
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.server.auth.Authentication
-import io.ktor.server.auth.jwt.jwt
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.requestvalidation.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
-import io.ktor.util.logging.KtorSimpleLogger
-import io.ktor.util.logging.Logger
+import io.ktor.util.logging.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -34,6 +43,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.common.UnitTest
+import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyLoginQueryList
 import java.time.OffsetDateTime
 import java.util.*
@@ -49,7 +59,7 @@ class LoginRouteKtUnitTest {
         @BeforeAll
         @JvmStatic
         fun init() {
-            logger.debug("init..")
+            logger.debug("LoginRouteKtUnitTest init..")
             databaseFactory.connect()
             transaction {
                 addLogger(StdOutSqlLogger)
@@ -62,7 +72,7 @@ class LoginRouteKtUnitTest {
         @AfterAll
         @JvmStatic
         fun destroy() {
-            logger.debug("destroy..")
+            logger.debug("LoginRouteKtUnitTest destroy..")
             databaseFactory.close()
         }
     }
@@ -100,21 +110,11 @@ class LoginRouteKtUnitTest {
         environment {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
-        install(Authentication) {
-            jwt("refresh-jwt") {
-                securitySetup(
-                    "refresh-jwt",
-                    this@jwt,
-                    refresgJwtConfig
-                )
-            }
-            jwt("auth-jwt") {
-                securitySetup(
-                    "auth-jwt",
-                    this@jwt,
-                    jwtConfig
-                )
-            }
+        application {
+            configureSecurity()
+            configureValidation()
+            configureSerialization()
+            configureStatusPages()
         }
         application {
             routing {
@@ -129,7 +129,7 @@ class LoginRouteKtUnitTest {
     @Test
     fun `Login page should return 404`() = setupLoginRouteTest {
         val bodyAsText = client.get("/login").bodyAsText()
-        val response = kotlinx.serialization.json.Json.decodeFromString<ErrorResponse>(bodyAsText)
+        val response = Json.decodeFromString<ErrorResponse>(bodyAsText)
 
         assert(bodyAsText.isNotEmpty())
         assert(response.message == HttpStatusCode.NotFound.description)
@@ -139,6 +139,9 @@ class LoginRouteKtUnitTest {
 
     @Test
     fun `Invalid login suffixId request should return BadRequest `() = setupLoginRouteTest {
+        //given
+
+
         //when
         val response = client.post("/login/attempt") {
             contentType(ContentType.Application.Json)
@@ -155,12 +158,13 @@ class LoginRouteKtUnitTest {
     @Test
     fun `Invalid login prefixId request should return BadRequest `() = setupLoginRouteTest {
         //when
-        val response = client.post("/login/attempt") {
+        val bodyAsText = client.post {
+            url("/login/attempt")
             contentType(ContentType.Application.Json)
             val loginUserRequest = LoginUserRequest(prefixId = "", suffixId = "test", password = "<PASSWORD>")
             setBody(Json.encodeToString(loginUserRequest))
         }.bodyAsText()
-        val errorResponse = Json.decodeFromString<ErrorResponse>(response)
+        val errorResponse = Json.decodeFromString<ErrorResponse>(bodyAsText)
         //then
         assert(errorResponse.code == HttpStatusCode.BadRequest.value)
         assert(errorResponse.message.startsWith("Invalid login parameter"))

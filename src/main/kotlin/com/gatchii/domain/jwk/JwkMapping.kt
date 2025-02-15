@@ -16,7 +16,7 @@ import java.util.*
 object JwkTable : UUID7Table(
     name = "jwks",
 ) {
-    val privateKey = varchar("private_key", length = 255)
+    val privateKey = varchar("private_key", length = 512)
     val publicKey = text("public_key")
     val status = varchar("status", length = 10).nullable()
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }

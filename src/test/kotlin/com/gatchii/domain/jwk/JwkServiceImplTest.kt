@@ -10,6 +10,7 @@ import com.gatchii.utils.DateUtil
 import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
+import com.gatchii.utils.RsaPairHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.HoconApplicationConfig
 import io.ktor.util.*
@@ -150,7 +151,7 @@ class JwkServiceImplTest {
     @Test
     fun `test findAllJwk returns empty set when no jwks present`() = runTest {
         // given
-        coEvery { jwkRepository.findAll() } returns emptyList()
+        coEvery { jwkRepository.getAllUsable(any()) } returns ResultData(emptyList(), false)
         // when
         val result = jwkService.findAllJwk()
         // then
@@ -164,18 +165,12 @@ class JwkServiceImplTest {
         val generateKeyPair = ECKeyPairHandler.generateKeyPair()
 
         val activated = JwkModel(
-            privateKey = generateKeyPair.private.encoded.encodeBase64(),
+            privateKey = RsaPairHandler.encrypt(generateKeyPair.private.encoded.encodeBase64()),
             publicKey = generateKeyPair.public.encoded.encodeBase64(),
             createdAt = date,
-        )
-        val deleted = JwkModel(
-            privateKey = generateKeyPair.private.encoded.encodeBase64(),
-            publicKey = generateKeyPair.public.encoded.encodeBase64(),
-            createdAt = date,
-            deletedAt = date
         )
 
-        coEvery { jwkRepository.findAll() } returns listOf(activated, deleted)
+        coEvery { jwkRepository.getAllUsable(any()) } returns ResultData(listOf(activated), false)
         // when
         val result = jwkService.findAllJwk()
 
