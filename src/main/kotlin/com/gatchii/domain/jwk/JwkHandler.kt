@@ -82,7 +82,7 @@ class JwkHandler {
             return inactiveJwks.toList()
         }
 
-        //jwt를 생성할 때는 반드시 이 함수로 jwk를 불러와야 한다.
+        //jwt를 생성할 때는 반드시 이 함수를 통해 jwk를 불러와야 한다.
         fun getRandomActiveJwk(): Optional<JwkModel> {
             return if (activeJwks.isEmpty()) Optional.empty<JwkModel>()
             else {

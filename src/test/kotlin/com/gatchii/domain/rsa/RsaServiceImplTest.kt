@@ -36,7 +36,7 @@ class RsaServiceImplTest {
     @Test
     fun `generateRsa test`() = runTest {
         //given
-        mockkObject(RsaPairHandler.Companion)
+        mockkObject(RsaPairHandler)
         coEvery { rsaRepository.create(any()) } returns mockRsaModel
         coEvery { RsaPairHandler.generateRsaDataPair() } returns
                 RsaKeyDataPair(
@@ -51,7 +51,7 @@ class RsaServiceImplTest {
         //then
         coVerify(exactly = 1) { rsaRepository.create(any()) }
         coVerify(exactly = 1) { RsaPairHandler.generateRsaDataPair() }
-        unmockkObject(RsaPairHandler.Companion)
+        unmockkObject(RsaPairHandler)
     }
 
     @Test

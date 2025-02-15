@@ -10,6 +10,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.util.*
 import io.ktor.util.logging.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import java.security.Security
 import java.time.OffsetDateTime
@@ -78,7 +80,7 @@ fun securitySetup(name: String, config: JWTAuthenticationProvider.Config, jwtCon
     config.validate { credential ->
         val payload = credential.payload
         logger.info(" is valid ?  = ${payload.expiresAt} : " +
-                "\npayload.expiresAt?.time : ${payload.expiresAt?.time}" +
+                "\npayload.expiresAt?.time : ${payload.expiresAt?.time?.div(1000)}" +
                 "\nOffsetDateTime.now().toEpochSecond() : ${OffsetDateTime.now().toEpochSecond()}" +
                 "\nminusTime : ${payload.expiresAt?.time?.minus(OffsetDateTime.now().toEpochSecond() * 1000)}"
         )
@@ -101,12 +103,16 @@ fun securitySetup(name: String, config: JWTAuthenticationProvider.Config, jwtCon
     config.challenge { defaultScheme, realm ->
         val failureReason = call.attributes.getOrNull(authFailureKey)
         logger.error("$name : Invalid or expired token failureReason=[$failureReason], realm=$realm, issuer=$jwtIssuer")
-        call.respond(
-            ErrorResponse(
-                message = failureReason ?: "Token is not valid or has expired",
-                code = HttpStatusCode.Unauthorized.value,
-                path = call.request.uri
-            )
+        call.respondText(
+            Json.encodeToString(
+                ErrorResponse(
+                    message = failureReason ?: "Token is not valid or has expired",
+                    code = HttpStatusCode.Unauthorized.value,
+                    path = call.request.uri
+                )
+            ),
+            status = HttpStatusCode.Unauthorized,
+            contentType = ContentType.Application.Json
         )
     }
 }

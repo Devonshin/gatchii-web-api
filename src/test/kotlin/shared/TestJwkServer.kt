@@ -12,8 +12,6 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.util.*
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.bouncycastle.jce.ECNamedCurveTable
@@ -39,7 +37,8 @@ class TestJwkServer {
     private lateinit var server: NettyApplicationEngine
     val url: String
         get() {
-            return "http://localhost:${server.environment.connectors[0].port}"
+            val first = server.environment.connectors.first()
+            return "http://${first.host}:${first.port}"
         }
 
     // Generate EC Key Pair
@@ -130,7 +129,7 @@ class TestJwkServer {
             }
         }
         server.start(wait = false)
-        logger.debug("jwkServer.start().. {}", server.environment.connectors)
+        logger.debug("jwkServer.start().. {}", server.environment.connectors.first().port)
     }
 
     fun stop() {

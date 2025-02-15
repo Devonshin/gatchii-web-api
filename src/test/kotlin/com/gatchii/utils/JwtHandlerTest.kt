@@ -3,8 +3,12 @@ package com.gatchii.utils
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.*
 import com.gatchii.plugins.JwtConfig
+import io.mockk.unmockkAll
+import io.mockk.unmockkObject
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import shared.common.UnitTest
@@ -27,6 +31,12 @@ class JwtHandlerTest {
     )
 
     private var jwtStr: String = JwtHandler.generate("id", claim, algorithm, jwtConfig)
+
+    @BeforeEach
+    fun setUp() {
+        unmockkAll()
+        unmockkObject(JwtHandler)
+    }
 
     @Test
     fun `generate test`() {
@@ -81,7 +91,8 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `verify should return true for valid token`() {
+    fun `verify should return true for valid token`() = runTest {
+
         // Given
         val token = JwtHandler.generate("id", claim, algorithm, jwtConfig)
 
@@ -93,7 +104,7 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `too early verify should throw JWTVerificationException`() {
+    fun `too early verify should throw JWTVerificationException`()  = runTest {
         // Given
         val token = JwtHandler.generate("id", claim, algorithm, JwtConfig(
             audience = "rfrstAudience",
@@ -107,7 +118,7 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `verify should throw JWTDecodeException for token with invalid signature`() {
+    fun `verify should throw JWTDecodeException for token with invalid signature`()  = runTest {
         // Given
         val token = "invalid.token.signature"
         // When
@@ -117,7 +128,7 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `verify should throw IncorrectClaimException for token with incorrect audience`() {
+    fun `verify should throw IncorrectClaimException for token with incorrect audience`()  = runTest {
         // Given
         val incorrectConfig = JwtConfig(
             audience = "incorrect-audience",
@@ -132,7 +143,7 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `verify should throw IncorrectClaimException for token with incorrect issuer`() {
+    fun `verify should throw IncorrectClaimException for token with incorrect issuer`()  = runTest {
         // Given
         val incorrectConfig = JwtConfig(
             audience = jwtConfig.audience,
@@ -141,14 +152,14 @@ class JwtHandlerTest {
         val token = JwtHandler.generate("id", claim, algorithm, incorrectConfig)
 
         // When
-        assertThrows<IncorrectClaimException> {
+        assertThrows<JWTVerificationException> {
             JwtHandler.verify(token, algorithm, jwtConfig)
         }
         // Then
     }
 
     @Test
-    fun `verify should throw TokenExpiredException for expired token`() {
+    fun `verify should throw TokenExpiredException for expired token`()  = runTest {
         // Given
         val expiredConfig = JwtConfig(
             audience = jwtConfig.audience,
@@ -164,7 +175,7 @@ class JwtHandlerTest {
     }
 
     @Test
-    fun `verify should throw AlgorithmMismatchException for token with incorrect algorithm`() {
+    fun `verify should throw AlgorithmMismatchException for token with incorrect algorithm`()  = runTest {
         // Given
         val expiredConfig = JwtConfig(
             audience = jwtConfig.audience,

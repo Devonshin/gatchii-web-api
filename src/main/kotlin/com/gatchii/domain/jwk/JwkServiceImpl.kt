@@ -7,6 +7,7 @@ import com.gatchii.config.GlobalConfig
 import com.gatchii.utils.ECKeyPairHandler
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
 import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
+import com.gatchii.utils.RsaPairHandler
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import io.ktor.util.*
@@ -31,7 +32,6 @@ class JwkServiceImpl(
 
     init {
         val envVal = GlobalConfig.getConfigedValue("ktor.environment")
-        logger.info("Application envVal : $envVal")
         if (!envVal.equals("test", ignoreCase = true)) {
             runBlocking {
                 initializeJwk()
@@ -100,7 +100,9 @@ class JwkServiceImpl(
     override suspend fun getProvider(jwk: JwkModel): ECDSAKeyProvider {
         return object : ECDSAKeyProvider {
             override fun getPrivateKey(): ECPrivateKey {
-                return convertPrivateKey(jwk.privateKey) as ECPrivateKey
+                return convertPrivateKey(
+                    RsaPairHandler.decrypt(jwk.privateKey)
+                ) as ECPrivateKey
             }
 
             override fun getPublicKeyById(keyId: String?): ECPublicKey {
@@ -113,7 +115,7 @@ class JwkServiceImpl(
         }
     }
 
-    suspend fun getJwk(provider: ECDSAKeyProvider): ECKey {
+    suspend fun getJwkECKey(provider: ECDSAKeyProvider): ECKey {
         // Create ECKey using Nimbus JOSE + JWT
         val algo = convertAlgorithm(provider)
         val signingKeyId = algo.signingKeyId
@@ -128,10 +130,9 @@ class JwkServiceImpl(
     override suspend fun findAllJwk(): List<Map<String, String>> {
         val jwkSet = mutableListOf<Map<String, String>>()
 
-        for (model in jwkRepository.findAll()) {
-            if (model.deletedAt != null) continue
+        for (model in findAllUsableJwk()) {
             val provider = getProvider(model)
-            val jwk = getJwk(provider)
+            val jwk = getJwkECKey(provider)
             jwkSet.add(Json.decodeFromString<Map<String, String>>(jwk.toJSONString()))
         }
         return jwkSet
@@ -155,7 +156,7 @@ class JwkServiceImpl(
         val generatedKeyPair = ECKeyPairHandler.generateKeyPair()
         return jwkRepository.create(
             JwkModel(
-                privateKey = generatedKeyPair.private.encoded.encodeBase64(),
+                privateKey = RsaPairHandler.encrypt(generatedKeyPair.private.encoded.encodeBase64()),
                 publicKey = generatedKeyPair.public.encoded.encodeBase64(),
                 createdAt = OffsetDateTime.now()
             )
@@ -167,7 +168,7 @@ class JwkServiceImpl(
         val jwks = List<JwkModel>(size) {
             val generatedKeyPair = ECKeyPairHandler.generateKeyPair()
             JwkModel(
-                privateKey = generatedKeyPair.private.encoded.encodeBase64(),
+                privateKey = RsaPairHandler.encrypt(generatedKeyPair.private.encoded.encodeBase64()),
                 publicKey = generatedKeyPair.public.encoded.encodeBase64(),
                 createdAt = now
             )

@@ -89,6 +89,8 @@ class RefreshTokenServiceImplTest {
     fun setUp() {
         refreshTokenRepository = mockk<RefreshTokenRepository>()
         refreshTokenService = RefreshTokenServiceImpl(jwtConfig, refreshTokenRepository, jwkService, jwtService)
+        unmockkAll()
+        unmockkObject(JwtHandler)
     }
 
     @Test

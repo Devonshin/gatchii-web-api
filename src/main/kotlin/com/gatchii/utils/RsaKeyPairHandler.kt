@@ -1,5 +1,6 @@
 package com.gatchii.utils
 
+import com.gatchii.config.GlobalConfig
 import com.nimbusds.jose.jwk.RSAKey
 import java.nio.charset.StandardCharsets
 import java.security.*
@@ -37,11 +38,41 @@ data class RsaKeyDataPair(
 )
 
 class RsaPairHandler {
+
     companion object {
 
         private const val ALGORITHM = "RSA"
         private const val TRANSFORMATION = "RSA/ECB/PKCS1Padding"
         private const val KEY_SIZE = 2048
+        lateinit var rsaPublicKey: PublicKey
+        lateinit var rsaPrivateKey: PrivateKey
+        init {
+            loadMainRsaPair()
+        }
+        private fun loadMainRsaPair() {
+            val secretPath = GlobalConfig.getConfigedValue("ktor.secret.path")
+            val rsaPrivateKeyStr = GlobalConfig.getConfigedValue("ktor.secret.privateKey")
+            val rsaPublicKeyStr = GlobalConfig.getConfigedValue("ktor.secret.publicKey")
+            rsaPrivateKey = if (rsaPrivateKeyStr.isNotBlank()) {
+                strToPrivateKey(rsaPrivateKeyStr)
+            } else {
+                strToPrivateKey(FileUtil.readFile(secretPath + "/private.pem")!!)
+            }
+
+            rsaPublicKey = (if (rsaPublicKeyStr.isNotBlank()) {
+                strToPublicKey(rsaPublicKeyStr)
+            } else {
+                strToPublicKey(FileUtil.readFile(secretPath + "/public.pem")!!)
+            })
+        }
+
+        fun encrypt(textToEncrypt: String): String {
+            return encrypt(textToEncrypt, rsaPublicKey)
+        }
+
+        fun decrypt(encryptedText: String): String {
+            return decrypt(encryptedText, rsaPrivateKey)
+        }
 
         fun encrypt(textToEncrypt: String, publicKeyStr: String): String {
             return encrypt(textToEncrypt, strToPublicKey(publicKeyStr))
@@ -68,6 +99,11 @@ class RsaPairHandler {
 
         @Throws(InvalidKeySpecException::class, NoSuchAlgorithmException::class)
         fun strToPublicKey(publicKeyStr: String): PublicKey {
+            val publicKeyStr = publicKeyStr.replace("-----BEGIN RSA PUBLIC KEY-----", "")
+                .replace("-----END RSA PUBLIC KEY-----", "")
+                .replace("\\s", "")
+                .replace("\n", "")
+
             val keyBytes: ByteArray = decodeFromStr(publicKeyStr)
             val spec = X509EncodedKeySpec(keyBytes)
             val keyFactory = KeyFactory.getInstance(ALGORITHM)
@@ -75,6 +111,11 @@ class RsaPairHandler {
         }
 
         fun strToPrivateKey(privateKeyStr: String): PrivateKey {
+            val privateKeyStr = privateKeyStr.replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                .replace("-----END RSA PRIVATE KEY-----", "")
+                .replace("\\s", "")
+                .replace("\n", "")
+
             val kf = KeyFactory.getInstance(ALGORITHM)
             val keySpecPKCS8 = PKCS8EncodedKeySpec(decodeFromStr(privateKeyStr))
             val privateKey = kf.generatePrivate(keySpecPKCS8)
@@ -115,6 +156,7 @@ class RsaPairHandler {
 
         private fun encodeToStr(data: ByteArray): String = Base64.getEncoder().encodeToString(data)
         private fun decodeFromStr(data: String): ByteArray = Base64.getDecoder().decode(data)
+
     }
 
     //    @Throws(InvalidKeySpecException::class, NoSuchAlgorithmException::class, IOException::class, URISyntaxException::class)

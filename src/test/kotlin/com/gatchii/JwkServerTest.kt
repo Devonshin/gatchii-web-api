@@ -38,8 +38,10 @@ class JwkServerTest {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
         val client = HttpClient()
-        logger.debug("jwkServerTest: {}", jwkServer.url)
-        client.get { url(jwkServer.url) }.apply {
+        logger.debug("jwkServerTest..: {}", jwkServer.url)
+        client.get {
+            url(jwkServer.url)
+        }.apply {
             logger.debug("jwkServerTest: {}", this)
             assert(status == HttpStatusCode.OK)
         }
