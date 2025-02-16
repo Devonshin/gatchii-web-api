@@ -1,6 +1,6 @@
 package com.gatchii.common.task
 
-import com.gatchii.utils.DateUtil
+import com.gatchii.common.utils.DateUtil
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent

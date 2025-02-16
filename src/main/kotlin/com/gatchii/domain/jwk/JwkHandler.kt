@@ -1,7 +1,7 @@
 package com.gatchii.domain.jwk
 
 import com.gatchii.common.exception.InvalidUsableJwkStatusException
-import com.gatchii.utils.DateUtil
+import com.gatchii.common.utils.DateUtil
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import io.ktor.util.logging.*

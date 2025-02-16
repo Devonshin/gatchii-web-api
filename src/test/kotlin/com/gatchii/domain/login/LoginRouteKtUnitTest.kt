@@ -1,32 +1,16 @@
 package com.gatchii.domain.login
 
 import com.gatchii.common.const.Constants.Companion.SUCCESS
-import com.gatchii.common.exception.NotFoundUserException
+import com.gatchii.common.utils.BCryptPasswordEncoder
 import com.gatchii.domain.jwt.AccessToken
 import com.gatchii.domain.jwt.JwtModel
 import com.gatchii.domain.jwt.RefreshToken
-import com.gatchii.plugins.ErrorResponse
-import com.gatchii.plugins.JwtConfig
-import com.gatchii.plugins.JwtResponse
-import com.gatchii.plugins.configureSecurity
-import com.gatchii.plugins.configureSerialization
-import com.gatchii.plugins.configureStatusPages
-import com.gatchii.plugins.configureValidation
-import com.gatchii.plugins.securitySetup
-import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.plugins.*
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
 import io.ktor.server.config.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.requestvalidation.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import io.ktor.util.logging.*
@@ -54,8 +38,9 @@ import kotlin.test.Test
 class LoginRouteKtUnitTest {
 
     companion object {
-        val logger: Logger = KtorSimpleLogger(this::class.simpleName?:"LoginRouteKtUnitTest")
+        val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "LoginRouteKtUnitTest")
         private val databaseFactory: DatabaseFactoryForTest = DatabaseFactoryForTest()
+
         @BeforeAll
         @JvmStatic
         fun init() {
@@ -76,6 +61,7 @@ class LoginRouteKtUnitTest {
             databaseFactory.close()
         }
     }
+
     val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
     val refresgJwtConfig: JwtConfig = JwtConfig(
         audience = config.config("rfrst").property("audience").getString(),
@@ -92,6 +78,7 @@ class LoginRouteKtUnitTest {
         expireSec = 60,
     )
     private lateinit var loginRepository: LoginRepository
+
     //private lateinit var jwtService: JwtService
     //private lateinit var refreshTockenService: RefreshTokenService
     private lateinit var bCryptPasswordEncoder: BCryptPasswordEncoder
@@ -140,8 +127,6 @@ class LoginRouteKtUnitTest {
     @Test
     fun `Invalid login suffixId request should return BadRequest `() = setupLoginRouteTest {
         //given
-
-
         //when
         val response = client.post("/login/attempt") {
             contentType(ContentType.Application.Json)
@@ -299,7 +284,6 @@ class LoginRouteKtUnitTest {
         coVerify(exactly = 1) { loginService.loginProcess(loginUserRequest) }
 
     }
-
 
 
 }

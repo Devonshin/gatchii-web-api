@@ -1,6 +1,6 @@
 package com.gatchii.common.task
 
-import com.gatchii.utils.DateUtil
+import com.gatchii.common.utils.DateUtil
 import io.ktor.util.logging.*
 import kotlinx.coroutines.*
 import java.time.LocalDateTime

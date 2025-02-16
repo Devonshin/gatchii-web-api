@@ -8,7 +8,7 @@ import com.gatchii.domain.jwk.*
 import com.gatchii.domain.jwt.*
 import com.gatchii.domain.login.*
 import com.gatchii.domain.rsa.*
-import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.common.utils.BCryptPasswordEncoder
 import io.ktor.server.application.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin

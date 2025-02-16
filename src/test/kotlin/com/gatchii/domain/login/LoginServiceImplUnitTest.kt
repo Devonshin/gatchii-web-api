@@ -6,9 +6,8 @@ import com.gatchii.domain.rsa.RsaModel
 import com.gatchii.domain.rsa.RsaService
 import com.gatchii.plugins.JwtConfig
 import com.gatchii.common.exception.NotFoundUserException
-import com.gatchii.utils.BCryptPasswordEncoder
-import com.gatchii.utils.JwtHandler
-import com.gatchii.utils.RsaPairHandler
+import com.gatchii.common.utils.BCryptPasswordEncoder
+import com.gatchii.common.utils.RsaPairHandler
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat

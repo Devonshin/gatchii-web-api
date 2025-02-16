@@ -7,9 +7,9 @@ import com.auth0.jwt.interfaces.ECDSAKeyProvider
 import com.gatchii.domain.jwk.JwkModel
 import com.gatchii.domain.jwk.JwkService
 import com.gatchii.plugins.JwtConfig
-import com.gatchii.utils.ECKeyPairHandler
-import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
-import com.gatchii.utils.ECKeyPairHandler.Companion.generatePublicKeyFromPrivateKey
+import com.gatchii.common.utils.ECKeyPairHandler
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.convertPrivateKey
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.generatePublicKeyFromPrivateKey
 import com.gatchii.utils.JwtHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.*

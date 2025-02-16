@@ -1,12 +1,12 @@
 package com.gatchii.domain.jwk
 
+import com.gatchii.common.model.ResultData
 import com.gatchii.domain.jwk.JwkTable.createdAt
 import com.gatchii.domain.jwk.JwkTable.deletedAt
 import com.gatchii.domain.jwk.JwkTable.id
 import com.gatchii.domain.jwk.JwkTable.privateKey
-import com.gatchii.domain.jwk.JwkTable.status
 import com.gatchii.domain.jwk.JwkTable.publicKey
-import com.gatchii.common.model.ResultData
+import com.gatchii.domain.jwk.JwkTable.status
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.andWhere

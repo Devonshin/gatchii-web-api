@@ -3,11 +3,11 @@ package com.gatchii.domain.jwk
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
 import com.gatchii.common.task.TaskLeadHandler
+import com.gatchii.common.utils.ECKeyPairHandler
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.convertPrivateKey
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.convertPublicKey
+import com.gatchii.common.utils.RsaPairHandler
 import com.gatchii.config.GlobalConfig
-import com.gatchii.utils.ECKeyPairHandler
-import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
-import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
-import com.gatchii.utils.RsaPairHandler
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import io.ktor.util.*

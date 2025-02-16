@@ -1,7 +1,7 @@
 package com.gatchii.domain.jwk
 
 import com.gatchii.common.exception.NotSupportMethodException
-import com.gatchii.utils.ECKeyPairHandler
+import com.gatchii.common.utils.ECKeyPairHandler
 import io.ktor.util.*
 import io.ktor.util.logging.*
 import kotlinx.coroutines.runBlocking

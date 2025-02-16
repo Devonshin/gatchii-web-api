@@ -1,7 +1,7 @@
 package com.gatchii.domain.rsa
 
 
-import com.gatchii.utils.RsaPairHandler
+import com.gatchii.common.utils.RsaPairHandler
 import io.ktor.util.logging.*
 import java.time.OffsetDateTime
 import java.util.*
