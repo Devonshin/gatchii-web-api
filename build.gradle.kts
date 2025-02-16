@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_23
+
 val mockkVersion: String by project
 val kotlinVersion: String by project
 val logbackVersion: String by project
@@ -8,18 +11,26 @@ val postgresVersion: String by project
 val hikaricpVersion: String by project
 val jbcryptVersion: String by project
 val ktorVersion: String by project
+val kotlinCoroutines: String by project
+
+java.setTargetCompatibility(23)
 
 plugins {
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.1.10"
     id("io.ktor.plugin") version "2.3.13"
-    //id("io.ktor.plugin") version "3.1.0"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("idea")
     kotlin("plugin.power-assert") version "2.0.0"
 }
 
-group = "com.gatchii.webapi"
-version = "0.0.1"
+kotlin {
+    compilerOptions {
+        jvmTarget = JVM_23
+    }
+}
+
+group = "com.gatchii"
+version = "0.0.2"
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
@@ -42,35 +53,42 @@ application {
             "-Dconfig.resource=application-local.conf"
         )
     }
-
 }
 
 repositories {
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
+    maven {
+        url = uri("https://maven.pkg.github.com/Devonshin/gatchii-common-util")
+        credentials {
+            username = System.getenv("GITHUB_USERNAME") ?: "your-github-username"
+            password = System.getenv("GITHUB_TOKEN") ?: "your-personal-access-token"
+        }
+    }
+
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
-    implementation("io.ktor:ktor-server-auto-head-response-jvm")
-    implementation("io.ktor:ktor-server-core-jvm")
-    implementation("io.ktor:ktor-server-auth-jvm")
-    implementation("io.ktor:ktor-server-auth-jwt-jvm")
-    implementation("io.ktor:ktor-server-double-receive-jvm")
-    implementation("io.ktor:ktor-server-host-common-jvm")
-    implementation("io.ktor:ktor-server-status-pages-jvm")
-    implementation("io.ktor:ktor-server-caching-headers-jvm")
-    implementation("io.ktor:ktor-server-compression-jvm")
-    implementation("io.ktor:ktor-server-conditional-headers-jvm")
-    implementation("io.ktor:ktor-server-cors-jvm")
-    implementation("io.ktor:ktor-server-forwarded-header-jvm")
-    implementation("io.ktor:ktor-server-default-headers-jvm")
+    implementation("io.ktor:ktor-server-auto-head-response-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-auth-jwt-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-double-receive-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-host-common-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-caching-headers-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-compression-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-conditional-headers-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-cors-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-forwarded-header-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-default-headers-jvm:$ktorVersion")
     implementation("com.ucasoft.ktor:ktor-simple-cache-jvm:0.4.3")
     implementation("com.ucasoft.ktor:ktor-simple-redis-cache-jvm:0.4.3")
-    implementation("io.ktor:ktor-server-call-logging-jvm")
-    implementation("io.ktor:ktor-server-call-id-jvm")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
+    implementation("io.ktor:ktor-server-call-logging-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-id-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
     implementation("io.insert-koin:koin-ktor:$koinVersion")
     implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
@@ -79,10 +97,10 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-java-time:$exposedVersion")
     implementation("com.h2database:h2:$h2Version")
     implementation("org.postgresql:postgresql:$postgresVersion")
-    implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.ktor:ktor-server-config-yaml")
+    implementation("io.ktor:ktor-server-config-yaml:$ktorVersion")
     // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
     implementation("org.bouncycastle:bcprov-jdk18on:1.79")
     implementation("com.nimbusds:nimbus-jose-jwt:9.45")
@@ -96,12 +114,20 @@ dependencies {
     // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-api
     //implementation("io.fabric8:kubernetes-client-api:6.13.4")
 
-    testImplementation("io.ktor:ktor-server-test-host-jvm")
+    //implementation("com.github.Devonshin:com.gatchii:gatchii-common-util:0.0.1")
+    implementation("com.gatchii:gatchii-common-util:0.0.8")
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-test
+
+    testImplementation(kotlin("test"))
+    testImplementation("io.ktor:ktor-server-host-common-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+    //testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
+    //testImplementation("org.jetbrains.kotlin:kotlin-test:2.1.10")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5:$kotlinVersion")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0-RC.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutines")
     testImplementation("io.mockk:mockk:${mockkVersion}")
     testImplementation("org.assertj:assertj-core:3.11.1")
-    testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.8.1")
 }
 
@@ -109,7 +135,9 @@ tasks.test {
     useJUnitPlatform()
     systemProperty("config.resource", "application-test.conf")
 }
-
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions.jvmTarget = JVM_23
+}
 tasks.register("unitTest", Test::class) {
     group = "test"
     description = "Run unit tests annotated with @UnitTest"

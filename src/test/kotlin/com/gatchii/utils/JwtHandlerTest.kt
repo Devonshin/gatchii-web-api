@@ -2,6 +2,7 @@ package com.gatchii.utils
 
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.*
+import com.gatchii.common.utils.ECKeyPairHandler
 import com.gatchii.plugins.JwtConfig
 import io.mockk.unmockkAll
 import io.mockk.unmockkObject

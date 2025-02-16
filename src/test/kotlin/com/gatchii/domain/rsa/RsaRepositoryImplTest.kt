@@ -3,7 +3,7 @@ package com.gatchii.domain.rsa;
 import com.gatchii.common.exception.NotSupportMethodException
 import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRsaQueryList
-import com.gatchii.utils.RsaPairHandler
+import com.gatchii.common.utils.RsaPairHandler
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.exposed.dao.id.EntityID

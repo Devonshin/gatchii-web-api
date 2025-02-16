@@ -3,7 +3,7 @@ package shared
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
 import com.gatchii.domain.jwk.JwkResponse
 import com.gatchii.domain.jwt.RefreshTokenRouteTest.Companion.logger
-import com.gatchii.utils.ECKeyPairHandler.Companion.PRAM_SPEC
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.PRAM_SPEC
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import io.ktor.http.*

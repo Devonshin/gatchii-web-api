@@ -1,13 +1,13 @@
 package com.gatchii.domain.jwk
 
+import com.gatchii.common.exception.NotSupportMethodException
+import com.gatchii.common.model.ResultData
+import com.gatchii.common.repository.ExposedCrudRepository
 import com.gatchii.domain.jwk.JwkTable.createdAt
 import com.gatchii.domain.jwk.JwkTable.deletedAt
 import com.gatchii.domain.jwk.JwkTable.id
 import com.gatchii.domain.jwk.JwkTable.privateKey
 import com.gatchii.domain.jwk.JwkTable.publicKey
-import com.gatchii.common.exception.NotSupportMethodException
-import com.gatchii.common.model.ResultData
-import com.gatchii.common.repository.ExposedCrudRepository
 import com.gatchii.domain.jwk.JwkTable.status
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow

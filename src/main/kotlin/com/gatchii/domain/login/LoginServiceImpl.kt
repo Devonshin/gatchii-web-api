@@ -4,7 +4,7 @@ import com.gatchii.domain.jwt.*
 import com.gatchii.domain.rsa.RsaService
 import com.gatchii.common.const.Constants.Companion.EMPTY_STR
 import com.gatchii.common.exception.NotFoundUserException
-import com.gatchii.utils.BCryptPasswordEncoder
+import com.gatchii.common.utils.BCryptPasswordEncoder
 import com.gatchii.utils.JwtHandler.Companion.newJwtModel
 import io.ktor.util.logging.*
 

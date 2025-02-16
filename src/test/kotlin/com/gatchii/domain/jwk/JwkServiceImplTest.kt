@@ -6,11 +6,11 @@ import com.gatchii.common.model.ResultData
 import com.gatchii.common.task.RoutineScheduleExpression
 import com.gatchii.common.task.RoutineTaskHandler
 import com.gatchii.common.task.TaskLeadHandler
-import com.gatchii.utils.DateUtil
-import com.gatchii.utils.ECKeyPairHandler
-import com.gatchii.utils.ECKeyPairHandler.Companion.convertPrivateKey
-import com.gatchii.utils.ECKeyPairHandler.Companion.convertPublicKey
-import com.gatchii.utils.RsaPairHandler
+import com.gatchii.common.utils.DateUtil
+import com.gatchii.common.utils.ECKeyPairHandler
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.convertPrivateKey
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.convertPublicKey
+import com.gatchii.common.utils.RsaPairHandler
 import com.typesafe.config.ConfigFactory
 import io.ktor.server.config.HoconApplicationConfig
 import io.ktor.util.*
@@ -34,7 +34,7 @@ import kotlin.test.BeforeTest
 @UnitTest
 class JwkServiceImplTest {
 
-    val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServiceImplTest")
+    private val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServiceImplTest")
     val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
     val jwkRepository = mockk<JwkRepository>()
     val taskName = "testJwkTask"

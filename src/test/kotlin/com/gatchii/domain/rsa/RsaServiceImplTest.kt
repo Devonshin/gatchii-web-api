@@ -1,9 +1,9 @@
 package com.gatchii.domain.rsa
 
-import com.gatchii.utils.PrivateKeyData
-import com.gatchii.utils.PublicKeyData
-import com.gatchii.utils.RsaKeyDataPair
-import com.gatchii.utils.RsaPairHandler
+import com.gatchii.common.utils.PrivateKeyData
+import com.gatchii.common.utils.PublicKeyData
+import com.gatchii.common.utils.RsaKeyDataPair
+import com.gatchii.common.utils.RsaPairHandler
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat

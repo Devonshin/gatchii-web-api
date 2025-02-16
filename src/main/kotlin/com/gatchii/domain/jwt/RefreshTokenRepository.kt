@@ -1,11 +1,11 @@
 package com.gatchii.domain.jwt
 
+import com.gatchii.common.repository.ExposedCrudRepository
 import com.gatchii.domain.jwt.RefreshTokenTable.createdAt
 import com.gatchii.domain.jwt.RefreshTokenTable.expireAt
 import com.gatchii.domain.jwt.RefreshTokenTable.id
 import com.gatchii.domain.jwt.RefreshTokenTable.isValid
 import com.gatchii.domain.jwt.RefreshTokenTable.userUid
-import com.gatchii.common.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
