@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_23
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
 
 val mockkVersion: String by project
 val kotlinVersion: String by project
@@ -13,10 +13,10 @@ val jbcryptVersion: String by project
 val ktorVersion: String by project
 val kotlinCoroutines: String by project
 
-java.setTargetCompatibility(23)
+java.setTargetCompatibility(21)
 
 plugins {
-    kotlin("jvm") version "2.1.10"
+    kotlin("jvm") version "2.1.20"
     id("io.ktor.plugin") version "2.3.13"
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("idea")
@@ -25,7 +25,7 @@ plugins {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JVM_23
+        jvmTarget = JVM_21
     }
 }
 
@@ -60,10 +60,10 @@ repositories {
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/ktor/eap") }
     maven {
         url = uri("https://maven.pkg.github.com/Devonshin/gatchii-common-util")
-        credentials {
-            username = System.getenv("GITHUB_USERNAME") ?: "your-github-username"
-            password = System.getenv("GITHUB_TOKEN") ?: "your-personal-access-token"
-        }
+        //credentials {
+        //    username = System.getenv("GITHUB_USERNAME") ?: "your-github-username"
+        //    password = System.getenv("GITHUB_TOKEN") ?: "your-personal-access-token"
+        //}
     }
 
 }
@@ -100,7 +100,6 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    implementation("io.ktor:ktor-server-config-yaml:$ktorVersion")
     // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on
     implementation("org.bouncycastle:bcprov-jdk18on:1.79")
     implementation("com.nimbusds:nimbus-jose-jwt:9.45")
@@ -136,7 +135,7 @@ tasks.test {
     systemProperty("config.resource", "application-test.conf")
 }
 tasks.withType<KotlinCompile>().configureEach {
-    compilerOptions.jvmTarget = JVM_23
+    compilerOptions.jvmTarget = JVM_21
 }
 tasks.register("unitTest", Test::class) {
     group = "test"
