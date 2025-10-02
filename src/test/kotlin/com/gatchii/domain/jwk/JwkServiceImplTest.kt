@@ -255,6 +255,9 @@ class JwkServiceImplTest {
         // given
         //val testDispatcher = StandardTestDispatcher(testScheduler)
         //val testScope = CoroutineScope(testDispatcher)
+        // 고정 타임존(UTC)으로 설정하여 DST/지역 설정에 따른 비결정성 제거
+        val originalTz = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
         val totalDays = 30
         val routineScheduleExpression = RoutineScheduleExpression(3, 0, 0)
         val now = LocalDateTime.now()
@@ -320,6 +323,8 @@ class JwkServiceImplTest {
         assert(discardJwks.size == totalJwkSize - maxCapacity - inactiveJwks.size)
         coVerify(exactly = discardJwks.size) { jwkRepository.delete(any<UUID>()) }
         coVerify(exactly = totalJwkSize) { jwkRepository.create(any()) }
+        // 타임존 복구
+        TimeZone.setDefault(originalTz)
         unmockkObject(DateUtil)
     }
 }

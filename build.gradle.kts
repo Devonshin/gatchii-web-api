@@ -17,7 +17,7 @@ java.setTargetCompatibility(21)
 
 plugins {
   kotlin("jvm") version "2.1.20"
-  id("io.ktor.plugin") version "2.3.13"
+  id("application")
   id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
   id("idea")
   kotlin("plugin.power-assert") version "2.0.0"
@@ -136,24 +136,33 @@ dependencies {
 }
 
 tasks.test {
-  useJUnitPlatform()
+  useJUnitPlatform {
+    // 기본 test에서는 통합 테스트(@integrationTest) 제외
+    excludeTags("integrationTest")
+  }
   systemProperty("config.resource", "application-test.conf")
 }
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions.jvmTarget = JVM_21
 }
-tasks.register("unitTest", Test::class) {
-  group = "test"
-  description = "Run unit tests annotated with @UnitTest"
+tasks.register<Test>("unitTest") {
+  group = "verification"
+  description = "Run tests annotated with @UnitTest"
+  // Ensure this task uses the default test source set
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
   useJUnitPlatform {
     includeTags("unitTest")
   }
   systemProperty("config.resource", "application-test.conf")
 }
 
-tasks.register("integrationTest", Test::class) {
-  group = "test"
-  description = "Run unit tests annotated with @IntegrationTest"
+tasks.register<Test>("integrationTest") {
+  group = "verification"
+  description = "Run tests annotated with @IntegrationTest"
+  // Ensure this task uses the default test source set
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
   useJUnitPlatform {
     includeTags("integrationTest")
   }
@@ -163,21 +172,26 @@ tasks.processResources {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+// check 시 통합 테스트까지 수행
+tasks.named("check") {
+  dependsOn("integrationTest")
+}
+
 sourceSets {
   main {
     resources {
-      setSrcDirs(listOf("src/main/resources"))
+      srcDirs("src/main/resources")
     }
     kotlin {
-      setSrcDirs(listOf("src/main/kotlin"))
+      srcDirs("src/main/kotlin")
     }
   }
   test {
     resources {
-      setSrcDirs(listOf("src/test/resources"))
+      srcDirs("src/test/resources")
     }
     kotlin {
-      setSrcDirs(listOf("src/test/kotlin"))
+      srcDirs("src/test/kotlin")
     }
   }
 }

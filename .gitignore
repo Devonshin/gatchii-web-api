@@ -66,9 +66,10 @@ node_modules/
 # Task files
 # tasks.json
 # tasks/ 
-/.taskmaster/
-
+.taskmaster/
+.WARP.md
 /local-doc
+project-doc
 *.md
 !CLAUDE.md
 !README.md

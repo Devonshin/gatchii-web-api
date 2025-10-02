@@ -1,1 +1,1 @@
-rootProject.name = "gatchii-web-api"
+rootProject.name = "gatchii-auth-api"

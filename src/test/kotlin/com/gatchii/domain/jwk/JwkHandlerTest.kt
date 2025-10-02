@@ -5,6 +5,7 @@ import io.ktor.util.logging.*
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
 import shared.common.UnitTest
 import java.time.OffsetDateTime
@@ -24,8 +25,8 @@ class JwkHandlerTest {
         }
     }
 
-    @BeforeTest
-    fun beforeTestSetUp() {
+@BeforeEach
+fun beforeTestSetUp() {
         JwkHandler.clearAll()
     }
 
