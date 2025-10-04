@@ -11,10 +11,13 @@ import com.gatchii.domain.rsa.RsaTable.privateKey
 import com.gatchii.domain.rsa.RsaTable.publicKey
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
 import java.util.*
+import java.time.OffsetDateTime
 
 /**
  * Package: com.gatchii.domains.jwk
@@ -67,5 +70,14 @@ interface RsaRepository : ExposedCrudRepository<RsaTable, RsaModel, UUID> {
             this[createdAt] = it.createdAt
         }
         this[deletedAt] = it.deletedAt
+    }
+
+    override suspend fun delete(id: UUID?) = dbQuery {
+        table.update(
+            where = { RsaTable.id eq id }
+        ) {
+            it[deletedAt] = OffsetDateTime.now()
+        }
+        return@dbQuery
     }
 }

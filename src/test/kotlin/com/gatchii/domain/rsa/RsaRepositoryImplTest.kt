@@ -267,11 +267,10 @@ class RsaRepositoryImplTest {
         val uuid = UUID.fromString("01922d5e-9721-77f0-8093-55f799339492")
         //when
         rsaRepository.delete(uuid)
-        totalRsaCount--
         //then
         val read = rsaRepository.read(uuid)
-        // RsaRepository.delete is hard-delete as per current implementation
-        assertThat(read).isNull()
+        assertThat(read).isNotNull()
+        assertThat(read?.deletedAt).isNotNull()
     }
 
     @Test
