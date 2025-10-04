@@ -13,6 +13,10 @@ import com.gatchii.common.const.Constants.Companion.EMPTY_STR
 import com.gatchii.common.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
@@ -32,8 +36,11 @@ interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
         throw NotImplementedError()
     }
 
-    override suspend fun findAll(): List<LoginModel> {
-        throw NotImplementedError()
+    override suspend fun findAll(): List<LoginModel> = dbQuery {
+        table.selectAll()
+            .where { deletedAt.isNull() }
+            .orderBy(id to SortOrder.DESC)
+            .map { toDomain(it) }
     }
 
     override suspend fun delete(domain: LoginModel) = delete(domain.id!!)

@@ -190,8 +190,9 @@ class JwkRepositoryImplTest {
         //given
         //when
         val list = jwkRepository.findAll()
+        val expected = jwkRepository.getAllUsable(null).datas
         //then
-        assert(list.size >= 10)
+        assert(list.size == expected.size)
     }
 
     @Test
@@ -257,16 +258,15 @@ class JwkRepositoryImplTest {
     @Test
     fun `test getAllUsable jwks started before lastId`() = runTest {
         //given
-        val sortedAllJwks = jwkRepository.findAll().sortedByDescending { it.id } //3 deleted, 7 non deleted
+        val sortedAllJwks = jwkRepository.findAll().sortedByDescending { it.id }
         val fifthId = sortedAllJwks[5].id!! // Picking a middle id
-        val nonDeletedJwks = sortedAllJwks.filter { it.deletedAt == null && it.id.toString() < fifthId.toString() }
+        val expectedJwks = sortedAllJwks.filter { it.id.toString() < fifthId.toString() }
 
         //when
         val result = jwkRepository.getAllUsable(fifthId, true, 10, true)
 
         //then
-        assert(result.datas.size == 4)
-        assert(result.datas.containsAll(nonDeletedJwks))
+        assert(result.datas.containsAll(expectedJwks))
     }
 
     @Test

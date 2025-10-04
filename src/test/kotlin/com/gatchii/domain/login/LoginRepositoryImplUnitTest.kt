@@ -134,17 +134,11 @@ class LoginRepositoryImplUnitTest {
     }
 
     @Test
-    fun `login findAll should throw an exception test`() = runTest {
-        //given
-        var isThrown = false
-        //when
-        try {
-            loginRepository.findAll()
-        } catch (e: NotImplementedError) {
-            isThrown = true
-        }
-        //then
-        assertThat(isThrown).isTrue()
+    fun `login findAll should return only non-deleted users`() = runTest {
+        // when
+        val list = loginRepository.findAll()
+        // then
+        assertThat(list.all { it.deletedAt == null }).isTrue()
     }
 
     @Test

@@ -11,6 +11,9 @@ import com.gatchii.domain.jwk.JwkTable.publicKey
 import com.gatchii.domain.jwk.JwkTable.status
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
@@ -74,6 +77,13 @@ interface JwkRepository : ExposedCrudRepository<JwkTable, JwkModel, UUID> {
             it[deletedAt] = OffsetDateTime.now()
         }
         return@dbQuery
+    }
+
+    override suspend fun findAll(): List<JwkModel> = dbQuery {
+        table.selectAll()
+            .where { deletedAt.isNull() }
+            .orderBy(id to SortOrder.DESC)
+            .map { toDomain(it) }
     }
 
 }
