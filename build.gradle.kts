@@ -175,9 +175,11 @@ tasks.processResources {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// check 시 통합 테스트까지 수행
-tasks.named("check") {
-  dependsOn("integrationTest")
+// check 시 통합 테스트까지 수행 (CI에서만 integrationTest 포함)
+if (System.getenv("CI") == "true" || project.hasProperty("ci")) {
+  tasks.named("check") {
+    dependsOn("integrationTest")
+  }
 }
 
 sourceSets {
