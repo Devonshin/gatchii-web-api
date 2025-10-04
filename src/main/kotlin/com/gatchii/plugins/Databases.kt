@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.StdOutSqlLogger
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.flywaydb.core.Flyway
 
 fun Application.configureDatabases() {
 
@@ -26,8 +27,12 @@ fun Application.configureDatabases() {
         )
     )
     databaseFactory.connect()
-    initData()
-    println("Database connected")
+    flywayMigrate(
+        url = dbConfig.property("url").getString(),
+        user = dbConfig.property("username").getString(),
+        password = dbConfig.property("password").getString()
+    )
+    println("Database connected & migrations applied")
 }
 
 //fun Application.configureH2() {
@@ -45,9 +50,19 @@ fun Application.configureDatabases() {
 private fun initData() {
     transaction {
         addLogger(StdOutSqlLogger)
+        // For legacy/dev fallback only: keep schema creation if needed
         SchemaUtils.create(*tables)
         SchemaUtils.createMissingTablesAndColumns(*tables)
     }
+}
+
+private fun flywayMigrate(url: String, user: String, password: String) {
+    val flyway = Flyway.configure()
+        .dataSource(url, user, password)
+        .locations("classpath:db/migration")
+        .baselineOnMigrate(true)
+        .load()
+    flyway.migrate()
 }
 
 val tables = arrayOf(
