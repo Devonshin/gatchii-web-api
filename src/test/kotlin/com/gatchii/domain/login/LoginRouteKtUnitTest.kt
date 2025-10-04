@@ -212,9 +212,9 @@ class LoginRouteKtUnitTest {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(loginUserRequest))
         }
-        println("STATUS NotFound: ${'$'}{httpRes.status}")
+        println("STATUS NotFound: ${httpRes.status}")
         val response = httpRes.bodyAsText()
-        println("RAW NotFound body: ${'$'}response")
+        println("RAW NotFound body: $response")
         //then
         val errorResponse = Json.decodeFromString<ErrorResponse>(response)
         println("errorResponse: $errorResponse")
@@ -277,9 +277,9 @@ class LoginRouteKtUnitTest {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(loginUserRequest))
         }
-        println("STATUS Success: ${'$'}{httpRes.status}")
+        println("STATUS Success: ${httpRes.status}")
         val response = httpRes.bodyAsText()
-        println("RAW Success body: ${'$'}response")
+        println("RAW Success body: $response")
 
         //then
         val jwtResponse = Json.decodeFromString<JwtResponse>(response)

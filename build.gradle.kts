@@ -71,6 +71,8 @@ repositories {
 dependencies {
   implementation(kotlin("stdlib"))
   implementation("org.flywaydb:flyway-core:10.16.0")
+  // Flyway 10+는 DB별 지원 모듈이 분리됨. PostgreSQL 지원 모듈 추가
+  implementation("org.flywaydb:flyway-database-postgresql:10.16.0")
   implementation("io.ktor:ktor-server-auto-head-response-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
   implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
