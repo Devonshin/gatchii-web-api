@@ -403,4 +403,24 @@ class JwkRepositoryImplTest {
         }
         // 주의: Exposed batchInsert의 트랜잭션 동작은 부분 삽입이 발생할 수 있어, 삽입 결과 건수에 대한 단언은 하지 않습니다.
     }
+
+    @Test
+    fun `withTransaction rolls back all writes when any operation fails`() = runTest {
+        // given
+        val before = jwkRepository.findAll().size
+        val valid = JwkModel(privateKey = "ok", publicKey = "ok", createdAt = OffsetDateTime.now())
+        val invalid = JwkModel(privateKey = "a".repeat(513), publicKey = "ok", createdAt = OffsetDateTime.now())
+        // when: 하나의 트랜잭션 경계 안에서 유효/무효 연속 호출 → 실패 시 전체 롤백 기대
+        assertThrows<Exception> {
+            com.gatchii.common.repository.RepositoryTransactionRunner.withTransaction {
+                runBlocking {
+                    jwkRepository.create(valid)
+                    jwkRepository.create(invalid) // 예외 발생 지점
+                }
+            }
+        }
+        // then: 첫 번째 create 역시 롤백되어 총 개수 변화가 없어야 함
+        val after = jwkRepository.findAll().size
+        assert(after == before)
+    }
 }

@@ -9,8 +9,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.logging.*
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /** Package: com.gatchii.domains.login Created: Devonshin Date: 23/09/2024 */
 
@@ -20,23 +18,30 @@ fun Route.loginRoute(
 
   val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "LoginRoute")
 
-  post ("/attempt") {
+  post<LoginUserRequest> ("/attempt") {
     val receive = call.receive<LoginUserRequest>()
-    val result = loginService.loginProcess(receive)
-    logger.info("Attempt Authenticate result: $result")
-    if (result == null) {
-      call.respond(HttpStatusCode.Unauthorized, HttpStatusCode.Unauthorized)
-    } else {
-      call.respondText(
-        Json.encodeToString(
-          JwtResponse(
-            message = SUCCESS,
-            code = HttpStatusCode.OK.value,
-            jwt = result
-          )
-        ),
-        contentType = ContentType.Application.Json,
-        status = HttpStatusCode.OK
+    try {
+      val result = loginService.loginProcess(receive)
+      // 민감 정보(토큰) 로그 노출 방지
+      logger.info("Attempt authenticate success for user: ${receive.prefixId}:${receive.suffixId}")
+      // Ktor Serialization 사용: 객체로 응답
+      call.respond(
+        status = HttpStatusCode.OK,
+        message = JwtResponse(
+          message = SUCCESS,
+          code = HttpStatusCode.OK.value,
+          jwt = result!!
+        )
+      )
+    } catch (e: Throwable) {
+      // 일관된 401 응답 (StatusPages가 매핑되어 있더라도 안전하게 처리)
+      logger.warn("Attempt authenticate failed for user: ${receive.prefixId}:${receive.suffixId}")
+      call.respond(
+        status = HttpStatusCode.Unauthorized,
+        message = mapOf(
+          "message" to "Unauthorized",
+          "code" to HttpStatusCode.Unauthorized.value
+        )
       )
     }
   }
