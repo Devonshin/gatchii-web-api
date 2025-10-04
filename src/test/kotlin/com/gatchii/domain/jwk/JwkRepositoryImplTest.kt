@@ -347,4 +347,60 @@ class JwkRepositoryImplTest {
         assert(count == 5)
         assert(deletedCount == 12)
     }
+
+    @Test
+    fun `delete by id should soft delete`() = runTest {
+        // given
+        val id = toDeleteJwkModel?.id!!
+        // when
+        jwkRepository.delete(id)
+        // then
+        val read = jwkRepository.read(id)
+        assert(read?.deletedAt != null)
+    }
+
+    @Test
+    fun `read returns null for non-existent id`() = runTest {
+        // when
+        val read = jwkRepository.read(UUID.randomUUID())
+        // then
+        assert(read == null)
+    }
+
+    @Test
+    fun `findAll is sorted by id desc`() = runTest {
+        // when
+        val list = jwkRepository.findAll()
+        // then
+        val ids = list.map { it.id!! }
+        val sorted = ids.sortedDescending()
+        assert(ids == sorted)
+    }
+
+    @Test
+    fun `create with too long privateKey should throw`() = runTest {
+        // given: privateKey length limit is 512
+        val tooLong = "a".repeat(513)
+        val model = JwkModel(
+            privateKey = tooLong,
+            publicKey = "publicKey",
+            createdAt = OffsetDateTime.now()
+        )
+        // then
+        assertThrows<Exception> {
+            runBlocking { jwkRepository.create(model) }
+        }
+    }
+
+    @Test
+    fun `batchCreate should throw when one item is invalid`() = runTest {
+        // given
+        val valid = JwkModel(privateKey = "ok", publicKey = "ok", createdAt = OffsetDateTime.now())
+        val invalid = JwkModel(privateKey = "a".repeat(513), publicKey = "ok", createdAt = OffsetDateTime.now())
+        // then
+        assertThrows<Exception> {
+            runBlocking { jwkRepository.batchCreate(listOf(valid, invalid)) }
+        }
+        // 주의: Exposed batchInsert의 트랜잭션 동작은 부분 삽입이 발생할 수 있어, 삽입 결과 건수에 대한 단언은 하지 않습니다.
+    }
 }
