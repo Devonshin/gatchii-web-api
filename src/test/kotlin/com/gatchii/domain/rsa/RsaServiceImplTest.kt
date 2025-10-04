@@ -176,4 +176,45 @@ class RsaServiceImplTest {
         )
         return rsaModel
     }
+
+    @Test
+    fun `decrypt should throw when ciphertext is invalid`() = runTest {
+        // given
+        val pair = RsaPairHandler.generateRsaDataPair()
+        val id = UUID.randomUUID()
+        coEvery { rsaRepository.read(id) } returns RsaModel(
+            publicKey = pair.publicKey.publicKey,
+            privateKey = pair.privateKey.privateKey,
+            exponent = pair.publicKey.e,
+            modulus = pair.publicKey.n,
+            createdAt = OffsetDateTime.now(),
+            id = id
+        )
+        val rsa = rsaService.getRsa(id)
+        val invalidCipher = "not-a-valid-cipher"
+        // when / then
+        assertThrows<Exception> { rsaService.decrypt(rsa, invalidCipher) }
+    }
+
+    @Test
+    fun `generateRsa should create model with required fields`() = runTest {
+        // given
+        mockkObject(RsaPairHandler)
+        coEvery { RsaPairHandler.generateRsaDataPair() } returns RsaKeyDataPair(
+            privateKey = PrivateKeyData(UUID.randomUUID().toString(), "priv", LocalDateTime.now()),
+            publicKey = PublicKeyData(UUID.randomUUID().toString(), "pub", "AQAB", "mod", LocalDateTime.now())
+        )
+        val captured = slot<RsaModel>()
+        coEvery { rsaRepository.create(capture(captured)) } answers { captured.captured.copy(id = UUID.randomUUID()) }
+        // when
+        val generated = rsaService.generateRsa()
+        // then
+        assertThat(generated).isNotNull
+        assertThat(captured.captured.publicKey).isNotBlank()
+        assertThat(captured.captured.privateKey).isNotBlank()
+        assertThat(captured.captured.exponent).isNotBlank()
+        assertThat(captured.captured.modulus).isNotBlank()
+        coVerify(exactly = 1) { rsaRepository.create(any()) }
+        unmockkObject(RsaPairHandler)
+    }
 }

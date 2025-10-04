@@ -39,18 +39,12 @@ object LoginTable : UUID7Table(name = "login_users") {
 
 @Serializable
 data class LoginModel(
-    @NotNull
     val prefixId: String,
-    @NotNull
     val suffixId: String,
-    @NotNull
     val password: String,
-    @NotNull
     @Serializable(with = UUIDSerializer::class)
     val rsaUid: UUID,
-    @NotNull
     val status: LoginStatus,
-    @NotNull
     val role: UserRole,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val lastLoginAt: OffsetDateTime,
@@ -62,11 +56,8 @@ data class LoginModel(
 
 @Serializable
 data class LoginUserRequest(
-    @NotNull
     val prefixId: String,
-    @NotNull
     val suffixId: String,
-    @NotNull
     val password: String,
 )
 

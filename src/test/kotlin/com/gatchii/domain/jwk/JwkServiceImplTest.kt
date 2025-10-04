@@ -327,5 +327,66 @@ class JwkServiceImplTest {
         TimeZone.setDefault(originalTz)
         unmockkObject(DateUtil)
     }
+
+    @Test
+    fun `getJwkECKey builds ECKey`() = runTest {
+        // given: 실제 키 자료로 provider 생성
+        val kp = ECKeyPairHandler.generateKeyPair()
+        val jwkModel = JwkModel(
+            privateKey = RsaPairHandler.encrypt(kp.private.encoded.encodeBase64()),
+            publicKey = kp.public.encoded.encodeBase64(),
+            createdAt = OffsetDateTime.now(),
+            id = UUID.randomUUID()
+        )
+        val provider = jwkService.getProvider(jwkModel)
+        // when
+        val ecKey = jwkService.getJwkECKey(provider)
+        // then
+        assert(ecKey.keyType.value == "EC")
+        assert(ecKey.toPublicJWK() != null)
+        assert(ecKey.toJSONString().isNotEmpty())
+    }
+
+    @Test
+    fun `createJwks delegates to repository with correct size`() = runTest {
+        // given
+        val size = 3
+        coEvery { jwkRepository.batchCreate(any()) } answers {
+            val list = firstArg<List<JwkModel>>()
+            list.map { it.copy(id = UUID.randomUUID()) }
+        }
+        // when
+        val result = jwkService.createJwks(size)
+        // then
+        assert(result.size == size)
+        coVerify(exactly = 1) { jwkRepository.batchCreate(any()) }
+    }
+
+    @Test
+    fun `deleteJwks should skip null ids and delete only valid ones`() = runTest {
+        // given
+        val now = OffsetDateTime.now()
+        val withId = JwkModel(privateKey = "p", publicKey = "q", createdAt = now, id = UUID.randomUUID())
+        val noId = JwkModel(privateKey = "p", publicKey = "q", createdAt = now)
+        coEvery { jwkRepository.delete(any<UUID>()) } returns Unit
+        // when
+        jwkService.deleteJwks(listOf(withId, noId))
+        // then
+        coVerify(exactly = 1) { jwkRepository.delete(withId.id!!) }
+    }
+
+    @Test
+    fun `findAllUsableJwk delegates repository call with max capacity`() = runTest {
+        // given
+        mockkObject(JwkHandler)
+        every { JwkHandler.jwkMaxCapacity() } returns 7
+        coEvery { jwkRepository.getAllUsable(null, true, 7, false) } returns ResultData(emptyList(), false)
+        // when
+        val result = jwkService.findAllUsableJwk()
+        // then
+        assert(result.isEmpty())
+        coVerify(exactly = 1) { jwkRepository.getAllUsable(null, true, 7, false) }
+        unmockkObject(JwkHandler)
+    }
 }
 

@@ -15,36 +15,36 @@ import kotlinx.serialization.json.Json
 /** Package: com.gatchii.domains.login Created: Devonshin Date: 23/09/2024 */
 
 fun Route.loginRoute(
-    loginService: LoginService
+  loginService: LoginService
 ) {
 
-    val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "LoginRoute")
+  val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "LoginRoute")
 
-    post("/attempt") {
-        val receive = call.receive<LoginUserRequest>()
-        val result = loginService.loginProcess(receive)
-        logger.info("Attempt Authenticate result: $result")
-        if (result == null) {
-            call.respond(HttpStatusCode.Unauthorized, HttpStatusCode.Unauthorized)
-        } else {
-            call.respondText(
-                Json.encodeToString(
-                    JwtResponse(
-                        message = SUCCESS,
-                        code = HttpStatusCode.OK.value,
-                        jwt = result
-                    )
-                ),
-                contentType = ContentType.Application.Json,
-                status = HttpStatusCode.OK
-            )
-        }
+  post ("/attempt") {
+    val receive = call.receive<LoginUserRequest>()
+    val result = loginService.loginProcess(receive)
+    logger.info("Attempt Authenticate result: $result")
+    if (result == null) {
+      call.respond(HttpStatusCode.Unauthorized, HttpStatusCode.Unauthorized)
+    } else {
+      call.respondText(
+        Json.encodeToString(
+          JwtResponse(
+            message = SUCCESS,
+            code = HttpStatusCode.OK.value,
+            jwt = result
+          )
+        ),
+        contentType = ContentType.Application.Json,
+        status = HttpStatusCode.OK
+      )
     }
+  }
 
-    authenticate("auth-jwt") {
-        get("/logout") {
+  authenticate("auth-jwt") {
+    get("/logout") {
 
-        }
     }
+  }
 
 }
