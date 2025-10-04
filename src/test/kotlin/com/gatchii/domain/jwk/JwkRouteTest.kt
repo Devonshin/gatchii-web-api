@@ -19,6 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import io.mockk.coEvery
 import io.mockk.mockk
+import shared.common.setupCommonApp
 
 /**
  * @author Devonshin
@@ -31,9 +32,7 @@ class JwkRouteTest {
     @Test
     @DisplayName("Should return 200 and JSON when request to /.well-known/gatchii-jwks.json")
     fun Should_return_200_and_JSON_when_request_jwks() = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
+        setupCommonApp(installStatusPages = true)
         val fake = mockk<JwkService>()
         coEvery { fake.findAllJwk() } returns listOf(
             mapOf(
@@ -45,11 +44,6 @@ class JwkRouteTest {
                 "e" to "AQAB"
             )
         )
-        application {
-            // Align install order pattern across tests (Serialization -> StatusPages)
-            configureSerialization()
-            configureStatusPages()
-        }
         application {
             routing {
                 route("/") {
@@ -75,7 +69,7 @@ class JwkRouteTest {
     @Test
     @DisplayName("Should return empty keys when no jwk exists")
     fun Should_return_empty_keys_when_no_jwk_exists() = testApplication {
-        environment { config = HoconApplicationConfig(ConfigFactory.load("application-test.conf")) }
+        setupCommonApp(installStatusPages = true)
         val fake = mockk<JwkService>()
         coEvery { fake.findAllJwk() } returns emptyList()
         application {

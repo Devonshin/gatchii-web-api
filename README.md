@@ -137,3 +137,42 @@ TODO: Define contributing guidelines, code style, and branching strategy if exte
 - Confirm whether GitHub Packages credentials are required for gatchii-common-util
 - Clarify intended use of secret PEM files vs remote JWKS
 - Consider adding OpenAPI/Swagger for route documentation
+
+<!-- TASKMASTER_EXPORT_START -->
+> 🎯 **Taskmaster Export** - 2025-10-04 23:13:33 UTC
+> 📋 Export: without subtasks • Status filter: none
+> 🔗 Powered by [Task Master](https://task-master.dev?utm_source=github-readme&utm_medium=readme-export&utm_campaign=gatchii-auth-api&utm_content=task-export-link)
+
+| Project Dashboard |  |
+| :-                |:-|
+| Task Progress     | ████████░░░░░░░░░░░░ 38% |
+| Done | 5 |
+| In Progress | 0 |
+| Pending | 8 |
+| Deferred | 0 |
+| Cancelled | 0 |
+|-|-|
+| Subtask Progress | ██████████████░░░░░░ 70% |
+| Completed | 14 |
+| In Progress | 0 |
+| Pending | 6 |
+
+
+| ID | Title | Status | Priority | Dependencies | Complexity |
+| :- | :-    | :-     | :-       | :-           | :-         |
+| 1 | TestContainers 및 통합 테스트 기반 구축 | ✓&nbsp;done | high | None | N/A |
+| 2 | 공통 테스트 유틸리티 및 Fixtures 작성 | ✓&nbsp;done | high | None | ● 6 |
+| 3 | Service 레이어 단위 테스트 보강 | ✓&nbsp;done | high | 2 | ● 7 |
+| 4 | Repository 레이어 단위 테스트 보강 | ✓&nbsp;done | high | 2 | ● 5 |
+| 5 | 공통 모듈 테스트 추가 | ○&nbsp;pending | medium | 2 | ● 4 |
+| 6 | Route 레이어 HTTP 엔드포인트 테스트 | ○&nbsp;pending | high | 2, 3 | ● 7 |
+| 7 | Login Flow 통합 테스트 구현 | ○&nbsp;pending | high | 1, 6 | ● 8 |
+| 8 | JWT Refresh 통합 테스트 구현 | ○&nbsp;pending | high | 1, 7 | ● 8 |
+| 9 | JWK 엔드포인트 통합 테스트 구현 | ○&nbsp;pending | high | 1, 6 | ● 7 |
+| 10 | 플러그인 테스트 추가 | ○&nbsp;pending | medium | 1, 2 | ● 6 |
+| 11 | End-to-End API 테스트 구현 | ○&nbsp;pending | medium | 7, 8, 9 | ● 9 |
+| 12 | 성능 테스트 및 CI/CD 최적화 | ○&nbsp;pending | medium | 11 | ● 8 |
+| 13 | LoginRouteKt 단위 테스트 실패 분석 및 수정 | ✓&nbsp;done | high | 1, 2 | N/A |
+
+> 📋 **End of Taskmaster Export** - Tasks are synced from your project using the `sync-readme` command.
+<!-- TASKMASTER_EXPORT_END -->

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
 import shared.common.UnitTest
 import shared.repository.DatabaseFactoryForTest
+import shared.common.setupCommonApp
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
@@ -82,34 +83,33 @@ class RefreshTokenRouteTest {
 
     inline fun setupApplication(crossinline block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
         logger.debug("setupApplication..")
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        install(DoubleReceive)
-        application {
-            // Serialization before Security, no StatusPages to keep challenge messages
-            configureSerialization()
-        }
-        install(Authentication) {
-            jwt("refresh-jwt") {
-                securitySetup(
-                    "refresh-jwt",
-                    this@jwt,
-                    refresgJwtConfig
-                )
+        setupCommonApp(
+            installStatusPages = false,
+            installSecurity = true,
+            installDoubleReceive = true,
+            securityInstall = {
+                install(Authentication) {
+                    jwt("refresh-jwt") {
+                        securitySetup(
+                            "refresh-jwt",
+                            this@jwt,
+                            refresgJwtConfig
+                        )
+                    }
+                    jwt("auth-jwt") {
+                        securitySetup(
+                            "auth-jwt",
+                            this@jwt,
+                            jwtConfig
+                        )
+                    }
+                }
             }
-            jwt("auth-jwt") {
-                securitySetup(
-                    "auth-jwt",
-                    this@jwt,
-                    jwtConfig
-                )
-            }
-        }
+        )
         application {
             routing {
                 route("/refresh-token") {
-                    refreshTokenRoute(refreshTokenService) //
+                    refreshTokenRoute(refreshTokenService)
                 }
             }
         }

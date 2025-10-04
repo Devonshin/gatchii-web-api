@@ -4,6 +4,7 @@ import com.gatchii.common.model.BaseModel
 import com.gatchii.common.repository.UUID7Table
 import com.gatchii.common.serializer.OffsetDateTimeSerializer
 import kotlinx.serialization.Serializable
+import com.gatchii.common.serializer.UUIDSerializer
 import org.jetbrains.exposed.sql.javatime.timestampWithTimeZone
 import java.time.OffsetDateTime
 import java.util.*
@@ -33,8 +34,10 @@ object RefreshTokenTable : UUID7Table(
     }
 }
 
+@Serializable
  data class RefreshTokenModel(
     val isValid: Boolean,
+    @Serializable(with = UUIDSerializer::class)
     val userUid: UUID,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val expireAt: OffsetDateTime? = null,
@@ -42,5 +45,6 @@ object RefreshTokenTable : UUID7Table(
     val createdAt: OffsetDateTime? = null,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val deletedAt: OffsetDateTime? = null,
+    @Serializable(with = UUIDSerializer::class)
     override var id: UUID? = null
 ) : BaseModel<UUID>

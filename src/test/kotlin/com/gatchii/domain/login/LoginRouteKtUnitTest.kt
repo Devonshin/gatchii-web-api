@@ -8,6 +8,7 @@ import com.gatchii.domain.jwt.RefreshToken
 import com.gatchii.plugins.*
 import com.typesafe.config.ConfigFactory
 import io.ktor.client.request.*
+import shared.common.setupCommonApp
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.config.*
@@ -94,20 +95,15 @@ class LoginRouteKtUnitTest {
     }
 
     inline fun setupLoginRouteTest(crossinline block: suspend ApplicationTestBuilder.() -> Unit) = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        application {
-            // Install order aligns with application config: Serialization -> Validation -> StatusPages -> Security
-            configureSerialization()
-            configureValidation()
-            configureStatusPages()
-            configureSecurity()
-        }
+        setupCommonApp(
+            installStatusPages = true,
+            installSecurity = true,
+            securityInstall = { configureSecurity() }
+        )
         application {
             routing {
                 route("/login") {
-                    loginRoute(loginService) // loginRoute에 loginService 전달
+                    loginRoute(loginService)
                 }
             }
         }
