@@ -23,6 +23,7 @@ import io.ktor.util.*
 import io.ktor.util.logging.*
 import io.mockk.*
 import kotlinx.serialization.json.Json
+import com.gatchii.plugins.configureSerialization
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
@@ -85,6 +86,10 @@ class RefreshTokenRouteTest {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
         install(DoubleReceive)
+        application {
+            // Serialization before Security, no StatusPages to keep challenge messages
+            configureSerialization()
+        }
         install(Authentication) {
             jwt("refresh-jwt") {
                 securitySetup(

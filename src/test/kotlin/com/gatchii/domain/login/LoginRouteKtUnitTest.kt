@@ -98,10 +98,11 @@ class LoginRouteKtUnitTest {
             config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
         }
         application {
-            configureSecurity()
-            configureValidation()
+            // Install order aligns with application config: Serialization -> Validation -> StatusPages -> Security
             configureSerialization()
+            configureValidation()
             configureStatusPages()
+            configureSecurity()
         }
         application {
             routing {

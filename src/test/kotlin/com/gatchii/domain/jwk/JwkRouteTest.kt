@@ -8,6 +8,8 @@ import io.ktor.server.config.*
 import io.ktor.server.routing.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
+import com.gatchii.plugins.configureSerialization
+import com.gatchii.plugins.configureStatusPages
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -43,6 +45,11 @@ class JwkRouteTest {
                 "e" to "AQAB"
             )
         )
+        application {
+            // Align install order pattern across tests (Serialization -> StatusPages)
+            configureSerialization()
+            configureStatusPages()
+        }
         application {
             routing {
                 route("/") {
