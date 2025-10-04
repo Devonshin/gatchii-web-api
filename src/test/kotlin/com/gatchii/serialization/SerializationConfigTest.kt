@@ -12,7 +12,11 @@ import kotlin.test.assertEquals
 
 class SerializationConfigTest {
 
-    private val json = Json // default config, matches application configureSerialization()
+    private val json = Json {
+        // keep in sync with Application.configureSerialization()
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     @Test
     fun `JwtResponse should serialize and deserialize`() {
@@ -27,6 +31,18 @@ class SerializationConfigTest {
         val decoded = json.decodeFromString<JwtResponse>(encoded)
         // then
         assertEquals(dto, decoded)
+    }
+
+    @Test
+    fun `should ignore unknown keys on decode for ErrorResponse`() {
+        // given
+        val raw = """{"message":"Bad Request","code":400,"path":"/login/attempt","extra":"foo"}"""
+        // when
+        val decoded = json.decodeFromString<ErrorResponse>(raw)
+        // then
+        assertEquals("Bad Request", decoded.message)
+        assertEquals(400, decoded.code)
+        assertEquals("/login/attempt", decoded.path)
     }
 
     @Test
