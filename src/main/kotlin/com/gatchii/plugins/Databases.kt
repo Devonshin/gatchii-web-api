@@ -53,7 +53,8 @@ private fun initData() {
 val tables = arrayOf(
     LoginTable,
     RsaTable,
-    JwkTable
+    JwkTable,
+    com.gatchii.domain.jwt.RefreshTokenTable
 )
 
 data class DatabaseConfig(

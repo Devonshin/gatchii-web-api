@@ -225,7 +225,8 @@ class RefreshTokenRepositoryImplTest {
         refreshRepository.delete(id)
         val find = refreshRepository.read(id)
         //then
-        assertThat(find).isNull()
+        assertThat(find).isNotNull
+        assertThat(find?.deletedAt).isNotNull
     }
 
     @Test
@@ -241,7 +242,8 @@ class RefreshTokenRepositoryImplTest {
         refreshRepository.delete(updateModel)
         //then
         val find = refreshRepository.read(updateModel.id!!)
-        assertThat(find).isNull()
+        assertThat(find).isNotNull
+        assertThat(find?.deletedAt).isNotNull
     }
 
     @Test

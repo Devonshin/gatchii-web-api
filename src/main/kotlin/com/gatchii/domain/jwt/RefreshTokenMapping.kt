@@ -21,6 +21,7 @@ object RefreshTokenTable : UUID7Table(
     val userUid = uuid("user_uid")
     val expireAt = timestampWithTimeZone("expire_at")
     val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
+    val deletedAt = timestampWithTimeZone("deleted_at").nullable()
     init {
         index(
             columns = arrayOf(
@@ -32,12 +33,14 @@ object RefreshTokenTable : UUID7Table(
     }
 }
 
-data class RefreshTokenModel(
+ data class RefreshTokenModel(
     val isValid: Boolean,
     val userUid: UUID,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val expireAt: OffsetDateTime? = null,
     @Serializable(with = OffsetDateTimeSerializer::class)
     val createdAt: OffsetDateTime? = null,
+    @Serializable(with = OffsetDateTimeSerializer::class)
+    val deletedAt: OffsetDateTime? = null,
     override var id: UUID? = null
 ) : BaseModel<UUID>
