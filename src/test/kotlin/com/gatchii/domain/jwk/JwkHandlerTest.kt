@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.AfterEach
 import shared.common.UnitTest
 import java.time.OffsetDateTime
 import java.util.*
@@ -28,6 +29,13 @@ class JwkHandlerTest {
 @BeforeEach
 fun beforeTestSetUp() {
         JwkHandler.clearAll()
+    }
+
+    @AfterEach
+    fun afterEach() {
+        // 전역 상태 및 설정 복원으로 테스트 간 간섭 방지
+        JwkHandler.clearAll()
+        JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
     }
 
     @Test

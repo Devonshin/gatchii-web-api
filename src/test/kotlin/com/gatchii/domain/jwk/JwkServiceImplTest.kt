@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import shared.common.UnitTest
@@ -60,6 +61,14 @@ class JwkServiceImplTest {
                 CoroutineScope(Dispatchers.Default)
             )
         }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        // 전역 객체 모킹 잔류로 인한 플래키 방지
+        try { unmockkObject(JwkHandler) } catch (_: Throwable) {}
+        try { unmockkObject(TaskLeadHandler) } catch (_: Throwable) {}
+        try { unmockkObject(DateUtil) } catch (_: Throwable) {}
     }
 
     @Test
