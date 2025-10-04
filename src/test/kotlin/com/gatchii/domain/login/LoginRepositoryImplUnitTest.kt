@@ -161,4 +161,74 @@ class LoginRepositoryImplUnitTest {
         assertThat(isThrown).isTrue()
     }
 
+    @Test
+    fun `read returns null for non-existent id`() = runTest {
+        // when
+        val read = loginRepository.read(UUID.randomUUID())
+        // then
+        assertThat(read).isNull()
+    }
+
+    @Test
+    fun `create with too long prefixId should throw`() = runTest {
+        // given
+        val tooLongPrefix = "a".repeat(51) // LoginTable.prefixId length = 50
+        val model = LoginModel(
+            id = UuidCreator.getTimeOrderedEpoch(),
+            prefixId = tooLongPrefix,
+            suffixId = "gmail.com",
+            password = "pw",
+            rsaUid = UUID.randomUUID(),
+            status = LoginStatus.ACTIVE,
+            role = UserRole.USER,
+            lastLoginAt = OffsetDateTime.now(),
+            deletedAt = null
+        )
+        // then
+        var thrown = false
+        try {
+            loginRepository.create(model)
+        } catch (e: Exception) {
+            thrown = true
+        }
+        assertThat(thrown).isTrue()
+    }
+
+    @Test
+    fun `withTransaction rolls back when second create fails`() = runTest {
+        // given
+        val prefixOk = "okUser"
+        val valid = LoginModel(
+            id = UuidCreator.getTimeOrderedEpoch(),
+            prefixId = prefixOk,
+            suffixId = "gmail.com",
+            password = "pw",
+            rsaUid = UUID.randomUUID(),
+            status = LoginStatus.ACTIVE,
+            role = UserRole.USER,
+            lastLoginAt = OffsetDateTime.now(),
+            deletedAt = null
+        )
+        val invalid = valid.copy(
+            id = UuidCreator.getTimeOrderedEpoch(),
+            prefixId = "b".repeat(51) // too long -> should fail
+        )
+        // when: one transaction containing two creates where second fails
+        var thrown = false
+        try {
+            com.gatchii.common.repository.RepositoryTransactionRunner.withTransaction {
+                kotlinx.coroutines.runBlocking {
+                    loginRepository.create(valid)
+                    loginRepository.create(invalid)
+                }
+            }
+        } catch (e: Exception) {
+            thrown = true
+        }
+        assertThat(thrown).isTrue()
+        // then: first insert should be rolled back
+        val found = loginRepository.findUser(prefixOk, "gmail.com")
+        assertThat(found).isNull()
+    }
+
 }

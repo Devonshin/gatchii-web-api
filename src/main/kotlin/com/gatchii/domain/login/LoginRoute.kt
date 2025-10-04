@@ -18,32 +18,19 @@ fun Route.loginRoute(
 
   val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "LoginRoute")
 
-  post<LoginUserRequest> ("/attempt") {
-    val receive = call.receive<LoginUserRequest>()
-    try {
-      val result = loginService.loginProcess(receive)
-      // 민감 정보(토큰) 로그 노출 방지
-      logger.info("Attempt authenticate success for user: ${receive.prefixId}:${receive.suffixId}")
-      // Ktor Serialization 사용: 객체로 응답
-      call.respond(
-        status = HttpStatusCode.OK,
-        message = JwtResponse(
-          message = SUCCESS,
-          code = HttpStatusCode.OK.value,
-          jwt = result!!
-        )
+  post<LoginUserRequest>("/attempt") { receive ->
+    val result = loginService.loginProcess(receive)
+    // 민감 정보(토큰) 로그 노출 방지
+    logger.info("Attempt authenticate success for user: ${receive.prefixId}:${receive.suffixId}")
+    // Ktor Serialization 사용: 객체로 응답 (예외는 StatusPages에 위임)
+    call.respond(
+      status = HttpStatusCode.OK,
+      message = JwtResponse(
+        message = SUCCESS,
+        code = HttpStatusCode.OK.value,
+        jwt = result!!
       )
-    } catch (e: Throwable) {
-      // 일관된 401 응답 (StatusPages가 매핑되어 있더라도 안전하게 처리)
-      logger.warn("Attempt authenticate failed for user: ${receive.prefixId}:${receive.suffixId}")
-      call.respond(
-        status = HttpStatusCode.Unauthorized,
-        message = mapOf(
-          "message" to "Unauthorized",
-          "code" to HttpStatusCode.Unauthorized.value
-        )
-      )
-    }
+    )
   }
 
   authenticate("auth-jwt") {

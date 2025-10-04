@@ -208,10 +208,13 @@ class LoginRouteKtUnitTest {
 
         coEvery { loginService.attemptAuthenticate(loginUserRequest) } returns null
         //when
-        val response = client.post("/login/attempt") {
+        val httpRes = client.post("/login/attempt") {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(loginUserRequest))
-        }.bodyAsText()
+        }
+        println("STATUS NotFound: ${'$'}{httpRes.status}")
+        val response = httpRes.bodyAsText()
+        println("RAW NotFound body: ${'$'}response")
         //then
         val errorResponse = Json.decodeFromString<ErrorResponse>(response)
         println("errorResponse: $errorResponse")
@@ -267,13 +270,16 @@ class LoginRouteKtUnitTest {
             ),
             refreshToken = RefreshToken(token = "<KEY>", expiresIn = 1731234748)
         )
-        coEvery { loginService.loginProcess(loginUserRequest) } returns jwtModel
+        coEvery { loginService.loginProcess(any()) } returns jwtModel
         //when
 
-        val response = client.post("/login/attempt") {
+        val httpRes = client.post("/login/attempt") {
             contentType(ContentType.Application.Json)
             setBody(Json.encodeToString(loginUserRequest))
-        }.bodyAsText()
+        }
+        println("STATUS Success: ${'$'}{httpRes.status}")
+        val response = httpRes.bodyAsText()
+        println("RAW Success body: ${'$'}response")
 
         //then
         val jwtResponse = Json.decodeFromString<JwtResponse>(response)
