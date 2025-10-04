@@ -243,4 +243,34 @@ class RefreshTokenRepositoryImplTest {
         val find = refreshRepository.read(updateModel.id!!)
         assertThat(find).isNull()
     }
+
+    @Test
+    fun `read returns null for non-existent id`() = runTest {
+        val read = refreshRepository.read(UUID.randomUUID())
+        assertThat(read).isNull()
+    }
+
+    @Test
+    fun `withTransaction rolls back when create fails`() = runTest {
+        val before = refreshRepository.findAll().size
+        val model = RefreshTokenModel(
+            isValid = true,
+            userUid = UUID.randomUUID(),
+            expireAt = OffsetDateTime.now().plusDays(1)
+        )
+        var thrown = false
+        try {
+            com.gatchii.common.repository.RepositoryTransactionRunner.withTransaction {
+                kotlinx.coroutines.runBlocking {
+                    refreshRepository.create(model)
+                    throw RuntimeException("force fail")
+                }
+            }
+        } catch (e: Exception) {
+            thrown = true
+        }
+        assertThat(thrown).isTrue()
+        val after = refreshRepository.findAll().size
+        assertThat(after).isEqualTo(before)
+    }
 }
