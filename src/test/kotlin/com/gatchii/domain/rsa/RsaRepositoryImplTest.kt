@@ -270,7 +270,37 @@ class RsaRepositoryImplTest {
         totalRsaCount--
         //then
         val read = rsaRepository.read(uuid)
+        // RsaRepository.delete is hard-delete as per current implementation
         assertThat(read).isNull()
+    }
+
+    @Test
+    fun `read returns null for non-existent id`() = runTest {
+        val read = rsaRepository.read(UUID.randomUUID())
+        assertThat(read).isNull()
+    }
+
+    @Test
+    fun `withTransaction rolls back when second create fails`() = runTest {
+        // given
+        val valid = realRsaModel(null)
+        // when
+        var thrown = false
+        try {
+            com.gatchii.common.repository.RepositoryTransactionRunner.withTransaction {
+                kotlinx.coroutines.runBlocking {
+                    rsaRepository.create(valid)
+                    // force failure to trigger rollback
+                    throw RuntimeException("force fail")
+                }
+            }
+        } catch (e: Exception) {
+            thrown = true
+        }
+        assertThat(thrown).isTrue()
+        // then: verify the valid row was rolled back
+        val found = rsaRepository.findAll().find { it.publicKey == valid.publicKey && it.privateKey == valid.privateKey }
+        assertThat(found).isNull()
     }
 
     private fun rsaModel(now: OffsetDateTime = OffsetDateTime.now()): RsaModel {
