@@ -23,7 +23,9 @@ import io.ktor.server.config.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -101,6 +103,14 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
     val pass = "P@ssw0rd!"
     seedUser(prefix, suffix, pass)
 
+    // Read last_login_at before login
+    val before = transaction {
+      LoginTable.selectAll()
+        .where { (LoginTable.prefixId eq prefix) and (LoginTable.suffixId eq suffix) }
+        .limit(1)
+        .single()[LoginTable.lastLoginAt]
+    }
+
     // 1) Login
     val loginHttp = client.post("/login/attempt") {
       header(HttpHeaders.Accept, ContentType.Application.Json.toString())
@@ -119,6 +129,15 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
       header(HttpHeaders.Accept, "*/*")
     }
     assertEquals(HttpStatusCode.OK, authRes.status)
+
+    // 3) last_login_at updated check (B안)
+    val after = transaction {
+      LoginTable.selectAll()
+        .where { (LoginTable.prefixId eq prefix) and (LoginTable.suffixId eq suffix) }
+        .limit(1)
+        .single()[LoginTable.lastLoginAt]
+    }
+    assertTrue(after.isAfter(before))
   }
 
   @Test

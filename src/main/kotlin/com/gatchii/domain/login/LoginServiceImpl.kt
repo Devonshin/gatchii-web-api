@@ -65,6 +65,10 @@ class LoginServiceImpl(
    * @return JwtModel containing access and refresh tokens.
    */
   override suspend fun loginSuccessAction(loginModel: LoginModel): JwtModel {
+    // B안: 로그인 성공 시 last_login_at 갱신
+    val updated = loginModel.copy(lastLoginAt = java.time.OffsetDateTime.now())
+    loginRepository.update(updated)
+
     val rsa = rsaService.getRsa(loginModel.rsaUid)
     val claim: Map<String, String> = mapOf(
       "userUid" to rsaService.encrypt(rsa, loginModel.id.toString()),
