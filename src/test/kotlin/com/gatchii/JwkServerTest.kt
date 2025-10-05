@@ -15,35 +15,35 @@ import kotlin.test.Test
 
 @UnitTest
 class JwkServerTest {
-    companion object {
-        val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServerTest")
-        val jwkServer = TestJwkServer() // Start temporary JWK server
+  companion object {
+    val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServerTest")
+    val jwkServer = TestJwkServer() // Start temporary JWK server
 
-        @BeforeAll
-        @JvmStatic
-        fun init() {
-            jwkServer.start()
-        }
-
-        @AfterAll
-        @JvmStatic
-        fun destroy() {
-            jwkServer.stop()
-        }
+    @BeforeAll
+    @JvmStatic
+    fun init() {
+      jwkServer.start()
     }
 
-    @Test
-    fun jwkServerTest() = testApplication {
-        environment {
-            config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
-        }
-        val client = HttpClient()
-        logger.debug("jwkServerTest..: {}", jwkServer.url)
-        client.get {
-            url(jwkServer.url)
-        }.apply {
-            logger.debug("jwkServerTest: {}", this)
-            assert(status == HttpStatusCode.OK)
-        }
+    @AfterAll
+    @JvmStatic
+    fun destroy() {
+      jwkServer.stop()
     }
+  }
+
+  @Test
+  fun jwkServerTest() = testApplication {
+    environment {
+      config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
+    }
+    val client = HttpClient()
+    logger.debug("jwkServerTest..: {}", jwkServer.url)
+    client.get {
+      url(jwkServer.url)
+    }.apply {
+      logger.debug("jwkServerTest: {}", this)
+      assert(status == HttpStatusCode.OK)
+    }
+  }
 }

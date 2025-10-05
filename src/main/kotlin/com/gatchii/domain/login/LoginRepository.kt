@@ -1,5 +1,7 @@
 package com.gatchii.domain.login
 
+import com.gatchii.common.const.Constants.Companion.EMPTY_STR
+import com.gatchii.common.repository.ExposedCrudRepository
 import com.gatchii.domain.login.LoginTable.deletedAt
 import com.gatchii.domain.login.LoginTable.id
 import com.gatchii.domain.login.LoginTable.lastLoginAt
@@ -9,14 +11,10 @@ import com.gatchii.domain.login.LoginTable.role
 import com.gatchii.domain.login.LoginTable.rsaUid
 import com.gatchii.domain.login.LoginTable.status
 import com.gatchii.domain.login.LoginTable.suffixId
-import com.gatchii.common.const.Constants.Companion.EMPTY_STR
-import com.gatchii.common.repository.ExposedCrudRepository
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.statements.UpdateStatement
@@ -30,76 +28,80 @@ import java.util.*
  * Date: 24/09/2024
  */
 
-interface LoginRepository: ExposedCrudRepository<LoginTable, LoginModel, UUID> {
+interface LoginRepository : ExposedCrudRepository<LoginTable, LoginModel, UUID> {
 
-    override suspend fun batchCreate(domains: List<LoginModel>, ignore: Boolean, shouldReturnGeneratedValues: Boolean): List<LoginModel> {
-        throw NotImplementedError()
+  override suspend fun batchCreate(
+    domains: List<LoginModel>,
+    ignore: Boolean,
+    shouldReturnGeneratedValues: Boolean
+  ): List<LoginModel> {
+    throw NotImplementedError()
+  }
+
+  override suspend fun findAll(): List<LoginModel> = dbQuery {
+    table.selectAll()
+      .where { deletedAt.isNull() }
+      .orderBy(id to SortOrder.DESC)
+      .map { toDomain(it) }
+  }
+
+  override suspend fun delete(domain: LoginModel) = delete(domain.id!!)
+
+  override suspend fun delete(id: UUID?) = dbQuery {
+    table.update(
+      where = { LoginTable.id eq id }
+    ) {
+      it[deletedAt] = OffsetDateTime.now()
+      //it[prefixId] = EMPTY_STR
+      //it[suffixId] = EMPTY_STR
+      it[password] = EMPTY_STR
+      it[role] = UserRole.DELETED
+      it[status] = LoginStatus.DELETED
     }
+    return@dbQuery
+  }
 
-    override suspend fun findAll(): List<LoginModel> = dbQuery {
-        table.selectAll()
-            .where { deletedAt.isNull() }
-            .orderBy(id to SortOrder.DESC)
-            .map { toDomain(it) }
-    }
+  override fun toDomain(row: ResultRow): LoginModel {
+    return LoginModel(
+      id = row[id].value,
+      prefixId = row[prefixId],
+      password = row[password],
+      rsaUid = row[rsaUid],
+      suffixId = row[suffixId],
+      lastLoginAt = row[lastLoginAt],
+      status = row[status],
+      role = row[role],
+      deletedAt = row.getOrNull(deletedAt)
+    )
+  }
 
-    override suspend fun delete(domain: LoginModel) = delete(domain.id!!)
+  override fun updateRow(domain: LoginModel): LoginTable.(UpdateStatement) -> Unit = {
+    //it[prefixId] = domain.prefixId
+    //it[suffixId] = domain.suffixId
+    it[password] = domain.password
+    it[rsaUid] = domain.rsaUid
+    it[status] = domain.status
+    it[role] = domain.role
+    it[lastLoginAt] = domain.lastLoginAt
+    it[deletedAt] = domain.deletedAt
+  }
 
-    override suspend fun delete(id: UUID?) = dbQuery {
-        table.update(
-            where = { LoginTable.id eq id }
-        ) {
-            it[deletedAt] = OffsetDateTime.now()
-            //it[prefixId] = EMPTY_STR
-            //it[suffixId] = EMPTY_STR
-            it[password] = EMPTY_STR
-            it[role] = UserRole.DELETED
-            it[status] = LoginStatus.DELETED
-        }
-        return@dbQuery
-    }
+  override fun toRow(domain: LoginModel): LoginTable.(InsertStatement<EntityID<UUID>>) -> Unit = {
+    if (domain.id != null) it[id] = domain.id!!
+    it[prefixId] = domain.prefixId
+    it[suffixId] = domain.suffixId
+    it[password] = domain.password
+    it[rsaUid] = domain.rsaUid
+    it[status] = domain.status
+    it[role] = domain.role
+    it[lastLoginAt] = domain.lastLoginAt
+    it[deletedAt] = domain.deletedAt
+  }
 
-    override fun toDomain(row: ResultRow): LoginModel {
-        return LoginModel(
-            id = row[id].value,
-            prefixId = row[prefixId],
-            password = row[password],
-            rsaUid = row[rsaUid],
-            suffixId = row[suffixId],
-            lastLoginAt = row[lastLoginAt],
-            status = row[status],
-            role = row[role],
-            deletedAt = row.getOrNull(deletedAt)
-        )
-    }
+  override fun toBatchRow(): BatchInsertStatement.(LoginModel) -> Unit = {
+    throw NotImplementedError()
+  }
 
-    override fun updateRow(domain: LoginModel): LoginTable.(UpdateStatement) -> Unit = {
-        //it[prefixId] = domain.prefixId
-        //it[suffixId] = domain.suffixId
-        it[password] = domain.password
-        it[rsaUid] = domain.rsaUid
-        it[status] = domain.status
-        it[role] = domain.role
-        it[lastLoginAt] = domain.lastLoginAt
-        it[deletedAt] = domain.deletedAt
-    }
-
-    override fun toRow(domain: LoginModel): LoginTable.(InsertStatement<EntityID<UUID>>) -> Unit = {
-        if(domain.id != null) it[id] = domain.id!!
-        it[prefixId] = domain.prefixId
-        it[suffixId] = domain.suffixId
-        it[password] = domain.password
-        it[rsaUid] = domain.rsaUid
-        it[status] = domain.status
-        it[role] = domain.role
-        it[lastLoginAt] = domain.lastLoginAt
-        it[deletedAt] = domain.deletedAt
-    }
-
-    override fun toBatchRow(): BatchInsertStatement.(LoginModel) -> Unit = {
-        throw NotImplementedError()
-    }
-
-    suspend fun findUser(prefixId: String, suffixId: String): LoginModel?
+  suspend fun findUser(prefixId: String, suffixId: String): LoginModel?
 
 }

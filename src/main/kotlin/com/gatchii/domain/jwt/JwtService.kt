@@ -10,7 +10,7 @@ import com.gatchii.plugins.JwtConfig
  */
 
 interface JwtService {
-    suspend fun generate(claim: Map<String, String>): String
-    suspend fun convert(token: String): DecodedJWT?
-    suspend fun config(): JwtConfig
+  suspend fun generate(claim: Map<String, String>): String
+  suspend fun convert(token: String): DecodedJWT?
+  suspend fun config(): JwtConfig
 }

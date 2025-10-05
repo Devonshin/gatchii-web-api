@@ -11,17 +11,17 @@ import java.util.*
  */
 
 interface JwkService {
-    suspend fun initializeJwk()
-    suspend fun getRandomJwk(): JwkModel
-    suspend fun findJwk(id: UUID): JwkModel
-    suspend fun convertAlgorithm(provider: ECDSAKeyProvider): Algorithm
-    suspend fun getProvider(jwk: JwkModel): ECDSAKeyProvider
-    suspend fun findAllJwk(): List<Map<String, String>>
-    suspend fun deleteJwk(id: UUID)
-    suspend fun deleteJwks(jwks: List<JwkModel>)
-    suspend fun createJwk(): JwkModel
-    suspend fun taskProcessing()
-    suspend fun createJwks(size: Int): List<JwkModel>
-    suspend fun findAllUsableJwk(): List<JwkModel>
+  suspend fun initializeJwk()
+  suspend fun getRandomJwk(): JwkModel
+  suspend fun findJwk(id: UUID): JwkModel
+  suspend fun convertAlgorithm(provider: ECDSAKeyProvider): Algorithm
+  suspend fun getProvider(jwk: JwkModel): ECDSAKeyProvider
+  suspend fun findAllJwk(): List<Map<String, String>>
+  suspend fun deleteJwk(id: UUID)
+  suspend fun deleteJwks(jwks: List<JwkModel>)
+  suspend fun createJwk(): JwkModel
+  suspend fun taskProcessing()
+  suspend fun createJwks(size: Int): List<JwkModel>
+  suspend fun findAllUsableJwk(): List<JwkModel>
 }
 

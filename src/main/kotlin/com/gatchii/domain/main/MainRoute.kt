@@ -15,21 +15,21 @@ import io.ktor.util.logging.*
 
 fun Route.mainRoute() {
 
-    val logger: Logger = KtorSimpleLogger(this::class.simpleName?:"MainRoute")
+  val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "MainRoute")
 
-    get(Regex("")) {
-        logger.info("Main")
-        call.respond("Hello World! This is main page")
-    }
+  get(Regex("")) {
+    logger.info("Main")
+    call.respond("Hello World! This is main page")
+  }
 
-    authenticate("auth-jwt") {
-        get("/authenticated") {
-            logger.info("Authenticated")
-            val principal = call.principal<JWTPrincipal>()
-            val username = principal!!.payload.getClaim("username").asString()
-            val expiresAt = principal.expiresAt?.time?.minus(System.currentTimeMillis())
-            call.respondText("Hello, $username! Token is expired at $expiresAt ms.")
-        }
+  authenticate("auth-jwt") {
+    get("/authenticated") {
+      logger.info("Authenticated")
+      val principal = call.principal<JWTPrincipal>()
+      val username = principal!!.payload.getClaim("username").asString()
+      val expiresAt = principal.expiresAt?.time?.minus(System.currentTimeMillis())
+      call.respondText("Hello, $username! Token is expired at $expiresAt ms.")
     }
+  }
 
 }

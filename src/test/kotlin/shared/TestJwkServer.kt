@@ -1,9 +1,9 @@
 package shared
 
 import com.auth0.jwt.interfaces.ECDSAKeyProvider
+import com.gatchii.common.utils.ECKeyPairHandler.Companion.PRAM_SPEC
 import com.gatchii.domain.jwk.JwkResponse
 import com.gatchii.domain.jwt.RefreshTokenRouteTest.Companion.logger
-import com.gatchii.common.utils.ECKeyPairHandler.Companion.PRAM_SPEC
 import com.nimbusds.jose.jwk.Curve
 import com.nimbusds.jose.jwk.ECKey
 import io.ktor.http.*
@@ -27,113 +27,113 @@ import java.security.interfaces.ECPublicKey
 
 class TestJwkServer {
 
-    init {
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
-            Security.addProvider(BouncyCastleProvider())
+  init {
+    if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+      Security.addProvider(BouncyCastleProvider())
+    }
+  }
+
+  //private lateinit var server: TestApplicationEngine
+  private lateinit var server: NettyApplicationEngine
+  val url: String
+    get() {
+      val first = server.environment.connectors.first()
+      return "http://${first.host}:${first.port}"
+    }
+
+  // Generate EC Key Pair
+  fun generateKeyPair(): KeyPair {
+    val ecSpec = ECNamedCurveTable.getParameterSpec(PRAM_SPEC) // Ensure BouncyCastle is used here
+    if (ecSpec == null) {
+      throw IllegalStateException("Curve secp256r1 is not supported")
+    }
+    val keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME)
+    keyPairGenerator.initialize(ecSpec, SecureRandom())
+    return keyPairGenerator.generateKeyPair()
+  }
+
+  val keyId = "secp256r1-key-${System.currentTimeMillis()}"
+  fun getJwk(keyPair: KeyPair): ECKey {
+    // Create ECKey using Nimbus JOSE + JWT
+    val ecKey = ECKey.Builder(Curve.P_256, keyPair.public as ECPublicKey?)
+      .privateKey(keyPair.private)
+      .keyID(keyId)
+      .algorithm(com.nimbusds.jose.Algorithm("ES256"))
+      .build()
+    return ecKey // Return public key representation
+  }
+
+  val keyPair = generateKeyPair()
+  val jwkJson: String? = getJwk(keyPair).toJSONString()
+
+  fun getGeneratedKeyPair(): KeyPair {
+    return keyPair
+  }
+
+  fun getJwkProvider(): ECDSAKeyProvider {
+    return object : ECDSAKeyProvider {
+      override fun getPrivateKey(): ECPrivateKey {
+        return keyPair.private as ECPrivateKey
+      }
+
+      override fun getPublicKeyById(keyId: String?): ECPublicKey {
+        return keyPair.public as ECPublicKey
+      }
+
+      override fun getPrivateKeyId(): String {
+        return keyId
+      }
+    }
+  }
+
+  val jwkList = setOf(Json.decodeFromString<Map<String, String>>(jwkJson!!))
+
+  fun start() {
+    /*server = TestApplicationEngine(createTestEnvironment {
+        connector {
+            host = "localhost"
+            port = 8880 // test server port
         }
-    }
-
-    //private lateinit var server: TestApplicationEngine
-    private lateinit var server: NettyApplicationEngine
-    val url: String
-        get() {
-            val first = server.environment.connectors.first()
-            return "http://${first.host}:${first.port}"
-        }
-
-    // Generate EC Key Pair
-    fun generateKeyPair(): KeyPair {
-        val ecSpec = ECNamedCurveTable.getParameterSpec(PRAM_SPEC) // Ensure BouncyCastle is used here
-        if (ecSpec == null) {
-            throw IllegalStateException("Curve secp256r1 is not supported")
-        }
-        val keyPairGenerator = KeyPairGenerator.getInstance("ECDSA", BouncyCastleProvider.PROVIDER_NAME)
-        keyPairGenerator.initialize(ecSpec, SecureRandom())
-        return keyPairGenerator.generateKeyPair()
-    }
-
-    val keyId = "secp256r1-key-${System.currentTimeMillis()}"
-    fun getJwk(keyPair: KeyPair): ECKey {
-        // Create ECKey using Nimbus JOSE + JWT
-        val ecKey = ECKey.Builder(Curve.P_256, keyPair.public as ECPublicKey?)
-            .privateKey(keyPair.private)
-            .keyID(keyId)
-            .algorithm(com.nimbusds.jose.Algorithm("ES256"))
-            .build()
-        return ecKey // Return public key representation
-    }
-
-    val keyPair = generateKeyPair()
-    val jwkJson: String? = getJwk(keyPair).toJSONString()
-
-    fun getGeneratedKeyPair(): KeyPair {
-        return keyPair
-    }
-
-    fun getJwkProvider(): ECDSAKeyProvider {
-        return object : ECDSAKeyProvider {
-            override fun getPrivateKey(): ECPrivateKey {
-                return keyPair.private as ECPrivateKey
+    }).apply {
+        start(wait = true)
+        val list = mutableSetOf<Map<String, String>>()
+        list.add(Json.decodeFromString<Map<String, String>>(jwkJson))
+        application.routing {
+            get("/") {
+                // Example response for testing purposes
+                logger.info("jwk server root.. ")
+                call.respondText("Hello, world!", ContentType.Text.Plain)
             }
-
-            override fun getPublicKeyById(keyId: String?): ECPublicKey {
-                return keyPair.public as ECPublicKey
-            }
-
-            override fun getPrivateKeyId(): String {
-                return keyId
-            }
-        }
-    }
-
-    val jwkList = setOf(Json.decodeFromString<Map<String, String>>(jwkJson!!))
-
-    fun start() {
-        /*server = TestApplicationEngine(createTestEnvironment {
-            connector {
-                host = "localhost"
-                port = 8880 // test server port
-            }
-        }).apply {
-            start(wait = true)
-            val list = mutableSetOf<Map<String, String>>()
-            list.add(Json.decodeFromString<Map<String, String>>(jwkJson))
-            application.routing {
-                get("/") {
-                    // Example response for testing purposes
-                    logger.info("jwk server root.. ")
-                    call.respondText("Hello, world!", ContentType.Text.Plain)
-                }
-                get("/.well-known/jwks.json") {
-                    // Example response for testing purposes
-                    logger.info("well-known.jwks.json... ")
-                    call.respond(HttpStatusCode.OK, JwkResponse(list))
-                }
-            }
-        }*/
-        server = embeddedServer(Netty, port = 8880) {
-            routing {
-                get("/") {
-                    // Example response for testing purposes
-                    logger.info("jwk server root.. ")
-                    call.respondText("Hello, world!", ContentType.Text.Plain)
-                }
-                get("/.well-known/jwks.json") {
-                    // Example response for testing purposes
-                    logger.info("well-known.jwks.json...")
-                    call.respondText(
-                        Json.encodeToString(JwkResponse(jwkList)),
-                        contentType = ContentType.Application.Json
-                    )
-                }
+            get("/.well-known/jwks.json") {
+                // Example response for testing purposes
+                logger.info("well-known.jwks.json... ")
+                call.respond(HttpStatusCode.OK, JwkResponse(list))
             }
         }
-        server.start(wait = false)
-        logger.debug("jwkServer.start().. {}", server.environment.connectors.first().port)
+    }*/
+    server = embeddedServer(Netty, port = 8880) {
+      routing {
+        get("/") {
+          // Example response for testing purposes
+          logger.info("jwk server root.. ")
+          call.respondText("Hello, world!", ContentType.Text.Plain)
+        }
+        get("/.well-known/jwks.json") {
+          // Example response for testing purposes
+          logger.info("well-known.jwks.json...")
+          call.respondText(
+            Json.encodeToString(JwkResponse(jwkList)),
+            contentType = ContentType.Application.Json
+          )
+        }
+      }
     }
+    server.start(wait = false)
+    logger.debug("jwkServer.start().. {}", server.environment.connectors.first().port)
+  }
 
-    fun stop() {
-        logger.debug("jwkServer.stop()..")
-        server.stop(0, 0)
-    }
+  fun stop() {
+    logger.debug("jwkServer.stop()..")
+    server.stop(0, 0)
+  }
 }

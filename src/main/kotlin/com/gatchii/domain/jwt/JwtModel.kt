@@ -9,19 +9,19 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
-data class JwtModel (
-    val accessToken: AccessToken,
-    val refreshToken: RefreshToken,
+data class JwtModel(
+  val accessToken: AccessToken,
+  val refreshToken: RefreshToken,
 )
 
 @Serializable
-data class AccessToken (
-    val token: String,
-    val expiresIn: Long,
+data class AccessToken(
+  val token: String,
+  val expiresIn: Long,
 )
 
 @Serializable
-data class RefreshToken (
-    val token: String,
-    val expiresIn: Long,
+data class RefreshToken(
+  val token: String,
+  val expiresIn: Long,
 )

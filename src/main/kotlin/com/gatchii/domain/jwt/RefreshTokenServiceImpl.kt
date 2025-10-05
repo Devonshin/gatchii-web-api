@@ -11,81 +11,81 @@ import java.util.*
 /** Package: com.gatchii.domains.jwt Created: Devonshin Date: 26/09/2024 */
 
 class RefreshTokenServiceImpl(
-    private val jwtConfig: JwtConfig,
-    private val refreshTokenRepository: RefreshTokenRepository,
-    private val jwkService: JwkService,
-    private val jwtService: JwtService,
+  private val jwtConfig: JwtConfig,
+  private val refreshTokenRepository: RefreshTokenRepository,
+  private val jwkService: JwkService,
+  private val jwtService: JwtService,
 ) : RefreshTokenService {
-    //유효한 토큰일 경우 새로운 토큰을 반환
-    override suspend fun renewal(oldRefreshToken: String): JwtModel {
+  //유효한 토큰일 경우 새로운 토큰을 반환
+  override suspend fun renewal(oldRefreshToken: String): JwtModel {
 
-        //todo blaick list 조회 필요
+    //todo blaick list 조회 필요
 
-        val convert = JwtHandler.convert(oldRefreshToken)
-        val id = convert.id
-        val jwk = jwkService.findJwk(UUID.fromString(id))
-        val provider = jwkService.getProvider(jwk)
-        val algorithm = jwkService.convertAlgorithm(provider)
+    val convert = JwtHandler.convert(oldRefreshToken)
+    val id = convert.id
+    val jwk = jwkService.findJwk(UUID.fromString(id))
+    val provider = jwkService.getProvider(jwk)
+    val algorithm = jwkService.convertAlgorithm(provider)
 
-        //verify
-        JwtHandler.verify(oldRefreshToken, algorithm, jwtConfig)
+    //verify
+    JwtHandler.verify(oldRefreshToken, algorithm, jwtConfig)
 
-        val claim =
-            JwtHandler.getClaim(convert).mapValues { it.value.toString() }
-        val userUid = claim["userUid"]?.let {
-            UUID.fromString(it)
-        } ?: throw InvalidClaimException("uuid is null")
+    val claim =
+      JwtHandler.getClaim(convert).mapValues { it.value.toString() }
+    val userUid = claim["userUid"]?.let {
+      UUID.fromString(it)
+    } ?: throw InvalidClaimException("uuid is null")
 
-        invalidateToken(
-            RefreshTokenModel(
-                isValid = false,
-                id = UUID.fromString(id),
-                userUid = userUid
-            )
-        )
-        //generate new one
-        val jwtConfig = jwtService.config()
-        val refreshJwtConfig = config()
-        return newJwtModel(
-            accessToken = jwtService.generate(claim),
-            jwtConfig = jwtConfig,
-            refreshToken = generate(claim),
-            refreshJwtConfig = refreshJwtConfig
-        )
-    }
+    invalidateToken(
+      RefreshTokenModel(
+        isValid = false,
+        id = UUID.fromString(id),
+        userUid = userUid
+      )
+    )
+    //generate new one
+    val jwtConfig = jwtService.config()
+    val refreshJwtConfig = config()
+    return newJwtModel(
+      accessToken = jwtService.generate(claim),
+      jwtConfig = jwtConfig,
+      refreshToken = generate(claim),
+      refreshJwtConfig = refreshJwtConfig
+    )
+  }
 
-    override suspend fun generate(
-        claim: Map<String, String>,
-    ): String {
-        val userUid = claim["userUid"] ?: throw InvalidClaimException("userUid is null in claim [$claim]")
-        val now = OffsetDateTime.now()
-        val registerToken = registerToken(
-            RefreshTokenModel(
-                userUid = UUID.fromString(userUid.toString()),
-                isValid = true,
-                expireAt = now.plusSeconds(jwtConfig.expireSec),
-                createdAt = now
-            )
-        )
-        val jwk = jwkService.getRandomJwk()
-        val provider = jwkService.getProvider(jwk)
-        val algorithm = jwkService.convertAlgorithm(provider)
-        return JwtHandler.generate(registerToken.id.toString(), claim, algorithm, jwtConfig)
-    }
+  override suspend fun generate(
+    claim: Map<String, String>,
+  ): String {
+    val userUid = claim["userUid"] ?: throw InvalidClaimException("userUid is null in claim [$claim]")
+    val now = OffsetDateTime.now()
+    val registerToken = registerToken(
+      RefreshTokenModel(
+        userUid = UUID.fromString(userUid.toString()),
+        isValid = true,
+        expireAt = now.plusSeconds(jwtConfig.expireSec),
+        createdAt = now
+      )
+    )
+    val jwk = jwkService.getRandomJwk()
+    val provider = jwkService.getProvider(jwk)
+    val algorithm = jwkService.convertAlgorithm(provider)
+    return JwtHandler.generate(registerToken.id.toString(), claim, algorithm, jwtConfig)
+  }
 
-    /**
-     *
-     */
-    override suspend fun registerToken(
-        refreshTokenModel: RefreshTokenModel
-    ): RefreshTokenModel = refreshTokenRepository.create(refreshTokenModel)
+  /**
+   *
+   */
+  override suspend fun registerToken(
+    refreshTokenModel: RefreshTokenModel
+  ): RefreshTokenModel = refreshTokenRepository.create(refreshTokenModel)
 
-    /**
-     *
-     */
-    override suspend fun invalidateToken(
-        refreshTokenModel: RefreshTokenModel
-    ): RefreshTokenModel = refreshTokenRepository.update(refreshTokenModel)
+  /**
+   *
+   */
+  override suspend fun invalidateToken(
+    refreshTokenModel: RefreshTokenModel
+  ): RefreshTokenModel = refreshTokenRepository.update(refreshTokenModel)
 
-    override suspend fun config(): JwtConfig = jwtConfig
+  override suspend fun config(): JwtConfig = jwtConfig
 }

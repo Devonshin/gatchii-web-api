@@ -10,14 +10,14 @@ import com.typesafe.config.ConfigFactory
  */
 
 class GlobalConfig {
-    val config: Config = ConfigFactory.load()
+  val config: Config = ConfigFactory.load()
 
-    companion object {
+  companion object {
 
-        private val instance = GlobalConfig()
+    private val instance = GlobalConfig()
 
-        fun getInstance(): GlobalConfig = instance
+    fun getInstance(): GlobalConfig = instance
 
-        fun getConfigedValue(key: String): String = getInstance().config.getString(key)
-    }
+    fun getConfigedValue(key: String): String = getInstance().config.getString(key)
+  }
 }

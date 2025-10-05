@@ -13,48 +13,48 @@ import java.util.*
  */
 
 class RsaServiceImpl(
-    private val rsaRepository: RsaRepository,
+  private val rsaRepository: RsaRepository,
 ) : RsaService {
 
-    private val logger = KtorSimpleLogger(this::class.simpleName?:"RsaServiceImpl")
+  private val logger = KtorSimpleLogger(this::class.simpleName ?: "RsaServiceImpl")
 
-    override suspend fun generateRsa(): RsaModel {
-        val rsaKeyPair = RsaPairHandler.generateRsaDataPair()
-        val privateKey = rsaKeyPair.privateKey
-        val publicKey = rsaKeyPair.publicKey
-        return rsaRepository.create(
-            RsaModel(
-                publicKey = publicKey.publicKey,
-                privateKey = privateKey.privateKey,
-                exponent = publicKey.e,
-                modulus = publicKey.n,
-                createdAt = OffsetDateTime.now()
-            )
-        )
-    }
+  override suspend fun generateRsa(): RsaModel {
+    val rsaKeyPair = RsaPairHandler.generateRsaDataPair()
+    val privateKey = rsaKeyPair.privateKey
+    val publicKey = rsaKeyPair.publicKey
+    return rsaRepository.create(
+      RsaModel(
+        publicKey = publicKey.publicKey,
+        privateKey = privateKey.privateKey,
+        exponent = publicKey.e,
+        modulus = publicKey.n,
+        createdAt = OffsetDateTime.now()
+      )
+    )
+  }
 
-    override suspend fun getRsa(id: UUID): RsaModel {
-        return findRsa(id)?: throw NoSuchElementException("No RsaModel found for id: $id")
-    }
+  override suspend fun getRsa(id: UUID): RsaModel {
+    return findRsa(id) ?: throw NoSuchElementException("No RsaModel found for id: $id")
+  }
 
-    override suspend fun findRsa(id: UUID): RsaModel? {
-        return rsaRepository.read(id)
-    }
+  override suspend fun findRsa(id: UUID): RsaModel? {
+    return rsaRepository.read(id)
+  }
 
-    override suspend fun deleteRsa(id: UUID) {
-        rsaRepository.delete(id)
-    }
+  override suspend fun deleteRsa(id: UUID) {
+    rsaRepository.delete(id)
+  }
 
-    override suspend fun deleteRsa(domain: RsaModel) {
-        deleteRsa(domain.id?: throw NoSuchElementException("No RsaModel found for id: $domain"))
-    }
+  override suspend fun deleteRsa(domain: RsaModel) {
+    deleteRsa(domain.id ?: throw NoSuchElementException("No RsaModel found for id: $domain"))
+  }
 
-    override suspend fun encrypt(rsaModel: RsaModel, data: String): String {
-        return RsaPairHandler.encrypt(data, rsaModel.publicKey)
-    }
+  override suspend fun encrypt(rsaModel: RsaModel, data: String): String {
+    return RsaPairHandler.encrypt(data, rsaModel.publicKey)
+  }
 
-    override suspend fun decrypt(rsaModel: RsaModel, data: String): String {
-        return RsaPairHandler.decrypt(data, rsaModel.privateKey)
-    }
+  override suspend fun decrypt(rsaModel: RsaModel, data: String): String {
+    return RsaPairHandler.decrypt(data, rsaModel.privateKey)
+  }
 
 }

@@ -11,15 +11,15 @@ import com.gatchii.plugins.JwtConfig
 
 interface RefreshTokenService {
 
-    suspend fun generate(claim: Map<String, String>): String
+  suspend fun generate(claim: Map<String, String>): String
 
-    //verify and refresh
-    suspend fun renewal(refreshToken: String): JwtModel
+  //verify and refresh
+  suspend fun renewal(refreshToken: String): JwtModel
 
-    suspend fun registerToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
+  suspend fun registerToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 
-    suspend fun invalidateToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
+  suspend fun invalidateToken(refreshTokenModel: RefreshTokenModel): RefreshTokenModel
 
-    suspend fun config(): JwtConfig
+  suspend fun config(): JwtConfig
 
 }

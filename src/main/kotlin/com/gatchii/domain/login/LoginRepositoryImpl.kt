@@ -9,17 +9,17 @@ import org.jetbrains.exposed.sql.selectAll
  * Date: 24/09/2024
  */
 
-class LoginRepositoryImpl(override val table: LoginTable): LoginRepository {
+class LoginRepositoryImpl(override val table: LoginTable) : LoginRepository {
 
-    override suspend fun findUser(prefixId: String, suffixId: String): LoginModel? = dbQuery {
-        table.selectAll()
-            .where {
-                table.prefixId eq prefixId
-            }.andWhere {
-                table.suffixId eq suffixId
-            }.limit(1)
-            .map { toDomain(it) }
-            .singleOrNull()
-    }
+  override suspend fun findUser(prefixId: String, suffixId: String): LoginModel? = dbQuery {
+    table.selectAll()
+      .where {
+        table.prefixId eq prefixId
+      }.andWhere {
+        table.suffixId eq suffixId
+      }.limit(1)
+      .map { toDomain(it) }
+      .singleOrNull()
+  }
 
 }

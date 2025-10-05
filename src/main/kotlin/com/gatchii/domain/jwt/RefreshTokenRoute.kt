@@ -14,17 +14,19 @@ import io.ktor.util.logging.*
  */
 
 fun Route.refreshTokenRoute(
-    refreshTokenService: RefreshTokenService
+  refreshTokenService: RefreshTokenService
 ) {
-    val logger = KtorSimpleLogger(this::class.simpleName ?: "RefreshTokenRoute")
-    authenticate("refresh-jwt") {
-        post("/renewal") {
-            logger.info("Refresh token requested ${call.request.headers}")
-            call.request.header("Authorization")?.let {
-                val token = refreshTokenService.renewal(it)
-                call.respond(token)
-            }
-        }
-    }
+  val logger = KtorSimpleLogger(this::class.simpleName ?: "RefreshTokenRoute")
 
+  route("/refresh-token") {
+    authenticate("refresh-jwt") {
+      post("/renewal") {
+        logger.info("Refresh token requested ${call.request.headers}")
+        call.request.header("Authorization")?.let {
+          val token = refreshTokenService.renewal(it)
+          call.respond(token)
+        }
+      }
+    }
+  }
 }

@@ -11,13 +11,13 @@ import shared.common.UnitTest
 @UnitTest
 class JwkTestBuilderTest {
 
-    @Test
-    fun `JwkTestBuilder 기본값 생성`() {
-        // Given
-        val jwk = JwkTestBuilder().build()
-        // Then
-        assertThat(jwk.privateKey).isNotBlank()
-        assertThat(jwk.publicKey).isNotBlank()
-        assertThat(jwk.createdAt).isNotNull()
-    }
+  @Test
+  fun `JwkTestBuilder 기본값 생성`() {
+    // Given
+    val jwk = JwkTestBuilder().build()
+    // Then
+    assertThat(jwk.privateKey).isNotBlank()
+    assertThat(jwk.publicKey).isNotBlank()
+    assertThat(jwk.createdAt).isNotNull()
+  }
 }

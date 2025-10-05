@@ -14,45 +14,45 @@ import java.util.*
  */
 
 object JwkTable : UUID7Table(
-    name = "jwks",
+  name = "jwks",
 ) {
-    val privateKey = varchar("private_key", length = 512)
-    val publicKey = text("public_key")
-    val status = varchar("status", length = 10).nullable()
-    val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
-    val deletedAt: Column<OffsetDateTime?> = timestampWithTimeZone("deleted_at").nullable()
+  val privateKey = varchar("private_key", length = 512)
+  val publicKey = text("public_key")
+  val status = varchar("status", length = 10).nullable()
+  val createdAt = timestampWithTimeZone("created_at").clientDefault { OffsetDateTime.now() }
+  val deletedAt: Column<OffsetDateTime?> = timestampWithTimeZone("deleted_at").nullable()
 }
 
 data class JwkModel(
-    val privateKey: String,
-    val publicKey: String,
-    val status: JwkStatus = JwkStatus.ACTIVE,
-    val createdAt: OffsetDateTime? = null,
-    val deletedAt: OffsetDateTime? = null,
-    override var id: UUID? = null,
+  val privateKey: String,
+  val publicKey: String,
+  val status: JwkStatus = JwkStatus.ACTIVE,
+  val createdAt: OffsetDateTime? = null,
+  val deletedAt: OffsetDateTime? = null,
+  override var id: UUID? = null,
 ) : BaseModel<UUID> {
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is JwkModel) return false
-        if (id != other.id) return false
-        return true
-    }
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is JwkModel) return false
+    if (id != other.id) return false
+    return true
+  }
 
-    override fun hashCode(): Int {
-        return id?.hashCode() ?: 0
-    }
+  override fun hashCode(): Int {
+    return id?.hashCode() ?: 0
+  }
 }
 
 enum class JwkStatus {
-    ACTIVE,
-    INACTIVE,
-    DELETED;
+  ACTIVE,
+  INACTIVE,
+  DELETED;
 
-    companion object {
-        fun fromValue(value: String?): JwkStatus {
-            if (value == null) return INACTIVE
-            return JwkStatus.valueOf(value.uppercase())
-        }
+  companion object {
+    fun fromValue(value: String?): JwkStatus {
+      if (value == null) return INACTIVE
+      return JwkStatus.valueOf(value.uppercase())
     }
+  }
 }

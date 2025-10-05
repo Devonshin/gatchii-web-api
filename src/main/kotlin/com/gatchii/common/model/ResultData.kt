@@ -8,11 +8,11 @@ import java.util.*
  * Date: 27/01/2025
  */
 
-data class ResultData<T: BaseModel<UUID>> (
-    val datas: List<T>,
-    val hasMoreData: Boolean,
+data class ResultData<T : BaseModel<UUID>>(
+  val datas: List<T>,
+  val hasMoreData: Boolean,
 ) {
-    fun lastId(): UUID? {
-        return if (hasMoreData) datas[(datas.size - 1).coerceAtLeast(0)].id else null
-    }
+  fun lastId(): UUID? {
+    return if (hasMoreData) datas[(datas.size - 1).coerceAtLeast(0)].id else null
+  }
 }

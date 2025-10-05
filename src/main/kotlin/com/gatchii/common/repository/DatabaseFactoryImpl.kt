@@ -13,25 +13,25 @@ import org.jetbrains.exposed.sql.Database
  */
 
 class DatabaseFactoryImpl(databaseConfig: DatabaseConfig) : DatabaseFactory {
-    private val config: DatabaseConfig = databaseConfig
-    override fun connect() {
-        Database.connect(dataSource())
-    }
+  private val config: DatabaseConfig = databaseConfig
+  override fun connect() {
+    Database.connect(dataSource())
+  }
 
-    override fun close() {
-        TODO("Not yet implemented")
-    }
+  override fun close() {
+    TODO("Not yet implemented")
+  }
 
-    override fun dataSource(): HikariDataSource {
-        val hConfig = HikariConfig()
-        hConfig.jdbcUrl = config.url
-        hConfig.username = config.user
-        hConfig.password = config.password
-        hConfig.setDriverClassName(config.driverClass)
-        hConfig.maximumPoolSize = config.maxPoolSize
-        hConfig.isAutoCommit = true
-        hConfig.transactionIsolation = IsolationLevel.TRANSACTION_REPEATABLE_READ.name
-        hConfig.validate()
-        return HikariDataSource(hConfig)
-    }
+  override fun dataSource(): HikariDataSource {
+    val hConfig = HikariConfig()
+    hConfig.jdbcUrl = config.url
+    hConfig.username = config.user
+    hConfig.password = config.password
+    hConfig.setDriverClassName(config.driverClass)
+    hConfig.maximumPoolSize = config.maxPoolSize
+    hConfig.isAutoCommit = true
+    hConfig.transactionIsolation = IsolationLevel.TRANSACTION_REPEATABLE_READ.name
+    hConfig.validate()
+    return HikariDataSource(hConfig)
+  }
 }

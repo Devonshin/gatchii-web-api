@@ -14,19 +14,21 @@ package shared.fixture.aaa
  */
 abstract class BaseAaaTest {
 
-    protected inline fun <T> arrange(block: () -> T): T = block()
+  protected inline fun <T> arrange(block: () -> T): T = block()
 
-    protected inline fun <S, R> act(subject: S, crossinline action: (S) -> R): R = action(subject)
+  protected inline fun <S, R> act(subject: S, crossinline action: (S) -> R): R = action(subject)
 
-    protected inline fun asserting(block: () -> Unit) { block() }
+  protected inline fun asserting(block: () -> Unit) {
+    block()
+  }
 
-    protected inline fun <A, R> givenWhenThen(
-        crossinline arrange: () -> A,
-        crossinline act: (A) -> R,
-        crossinline assert: (A, R) -> Unit,
-    ) {
-        val a = arrange()
-        val r = act(a)
-        assert(a, r)
-    }
+  protected inline fun <A, R> givenWhenThen(
+    crossinline arrange: () -> A,
+    crossinline act: (A) -> R,
+    crossinline assert: (A, R) -> Unit,
+  ) {
+    val a = arrange()
+    val r = act(a)
+    assert(a, r)
+  }
 }

@@ -7,8 +7,8 @@ package com.gatchii.domain.jwt
  */
 
 sealed class ValidationResult {
-    object Success : ValidationResult()
-    object Expired : ValidationResult()
-    data class InvalidClaim(val invalidField: String, val message: String) : ValidationResult()
-    object MissingClaim : ValidationResult()
+  object Success : ValidationResult()
+  object Expired : ValidationResult()
+  data class InvalidClaim(val invalidField: String, val message: String) : ValidationResult()
+  object MissingClaim : ValidationResult()
 }

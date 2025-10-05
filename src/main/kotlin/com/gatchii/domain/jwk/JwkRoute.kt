@@ -17,22 +17,22 @@ import kotlinx.serialization.json.Json
 
 fun Route.jwkRoute(jwkService: JwkService) {
 
-    val logger: Logger = KtorSimpleLogger(this::class.simpleName?:"JwkRoute")
+  val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "JwkRoute")
 
-    get(".well-known/gatchii-jwks.json") {
+  get(".well-known/gatchii-jwks.json") {
 
-        val jwkList = jwkService.findAllJwk()
-        call.respondText(
-            Json.encodeToString(JwkResponse(jwkList.toSet())),
-            contentType = ContentType.Application.Json
-        )
+    val jwkList = jwkService.findAllJwk()
+    call.respondText(
+      Json.encodeToString(JwkResponse(jwkList.toSet())),
+      contentType = ContentType.Application.Json
+    )
 
-    }
+  }
 
 }
 
 
 @Serializable
 data class JwkResponse(
-    val keys: Set<Map<String, String>>
+  val keys: Set<Map<String, String>>
 )

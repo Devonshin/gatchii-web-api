@@ -10,18 +10,18 @@ import com.gatchii.domain.jwt.JwtModel
 
 interface LoginService {
 
-    suspend fun loginProcess(loginUserRequest: LoginUserRequest): JwtModel?
+  suspend fun loginProcess(loginUserRequest: LoginUserRequest): JwtModel?
 
-    suspend fun createLoginUser(loginUser: LoginModel): LoginModel
+  suspend fun createLoginUser(loginUser: LoginModel): LoginModel
 
-    suspend fun deleteLoginUser(loginUser: LoginModel)
+  suspend fun deleteLoginUser(loginUser: LoginModel)
 
-    suspend fun updateLoginUser(loginUser: LoginModel)
+  suspend fun updateLoginUser(loginUser: LoginModel)
 
-    suspend fun attemptAuthenticate(loginUserRequest: LoginUserRequest): LoginModel?
+  suspend fun attemptAuthenticate(loginUserRequest: LoginUserRequest): LoginModel?
 
-    suspend fun loginSuccessAction(loginModel: LoginModel): JwtModel
+  suspend fun loginSuccessAction(loginModel: LoginModel): JwtModel
 
-    suspend fun loginFailAction(loginUserRequest: LoginUserRequest): Unit
+  suspend fun loginFailAction(loginUserRequest: LoginUserRequest): Unit
 
 }

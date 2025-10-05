@@ -16,14 +16,14 @@ import java.util.*
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = UUID::class)
-class UUIDSerializer: KSerializer<UUID> {
+class UUIDSerializer : KSerializer<UUID> {
 
-    override fun serialize(encoder: Encoder, value: UUID) {
-        encoder.encodeString(value.toString())
-    }
+  override fun serialize(encoder: Encoder, value: UUID) {
+    encoder.encodeString(value.toString())
+  }
 
-    override fun deserialize(decoder: Decoder): UUID {
-        return UuidCreator.fromString(decoder.decodeString())
-    }
+  override fun deserialize(decoder: Decoder): UUID {
+    return UuidCreator.fromString(decoder.decodeString())
+  }
 
 }

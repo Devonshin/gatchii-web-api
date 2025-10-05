@@ -7,5 +7,5 @@ package com.gatchii.common.model
  */
 
 interface BaseModel<T> {
-    var id: T?
+  var id: T?
 }

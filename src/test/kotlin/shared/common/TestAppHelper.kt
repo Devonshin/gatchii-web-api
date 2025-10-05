@@ -14,27 +14,27 @@ import io.ktor.server.testing.*
  * - Serialization → Validation → (StatusPages) → (DoubleReceive) → (Security)
  */
 fun ApplicationTestBuilder.setupCommonApp(
-    configResource: String = "application-test.conf",
-    installStatusPages: Boolean = true,
-    installSecurity: Boolean = false,
-    installDoubleReceive: Boolean = false,
-    securityInstall: (Application.() -> Unit)? = null,
+  configResource: String = "application-test.conf",
+  installStatusPages: Boolean = true,
+  installSecurity: Boolean = false,
+  installDoubleReceive: Boolean = false,
+  securityInstall: (Application.() -> Unit)? = null,
 ) {
-    environment {
-        config = HoconApplicationConfig(ConfigFactory.load(configResource))
+  environment {
+    config = HoconApplicationConfig(ConfigFactory.load(configResource))
+  }
+  application {
+    // 순서 중요: JSON → Validation → StatusPages → 추가 플러그인
+    configureSerialization()
+    configureValidation()
+    if (installStatusPages) {
+      configureStatusPages()
     }
-    application {
-        // 순서 중요: JSON → Validation → StatusPages → 추가 플러그인
-        configureSerialization()
-        configureValidation()
-        if (installStatusPages) {
-            configureStatusPages()
-        }
-        if (installDoubleReceive) {
-            install(DoubleReceive)
-        }
-        if (installSecurity) {
-            securityInstall?.invoke(this)
-        }
+    if (installDoubleReceive) {
+      install(DoubleReceive)
     }
+    if (installSecurity) {
+      securityInstall?.invoke(this)
+    }
+  }
 }

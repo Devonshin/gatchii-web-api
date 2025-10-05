@@ -9,7 +9,7 @@ import javax.sql.DataSource
  */
 
 interface DatabaseFactory {
-    fun connect()
-    fun close()
-    fun dataSource(): DataSource
+  fun connect()
+  fun close()
+  fun dataSource(): DataSource
 }
