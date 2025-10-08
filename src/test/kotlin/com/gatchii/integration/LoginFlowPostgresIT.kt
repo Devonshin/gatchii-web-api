@@ -99,9 +99,10 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
     return userId to rsaId
   }
 
-  private fun seedJwk() {
+  private fun seedJwk(testJwkServer: TestJwkServer) {
     transaction {
-      val keyPair = com.gatchii.common.utils.ECKeyPairHandler.generateKeyPair()
+      // TestJwkServer의 키 페어를 사용하여 JWT 생성/검증 일관성 보장
+      val keyPair = testJwkServer.getGeneratedKeyPair()
       val privEnc = com.gatchii.common.utils.RsaPairHandler.encrypt(keyPair.private.encoded.encodeBase64())
       val pubB64 = keyPair.public.encoded.encodeBase64()
       JwkTable.insert {
@@ -137,7 +138,8 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
     dbFactory.connect()
 
     // JWT 서명을 위한 JWK 사전 데이터 삽입 (트랜잭션이 커밋되도록 application 블록 밖에서 수행)
-    this@LoginFlowPostgresIT.seedJwk()
+    // TestJwkServer의 키 페어를 사용하여 JWT 생성/검증 키가 일치하도록 보장
+    this@LoginFlowPostgresIT.seedJwk(jwkServer)
 
     // Ktor app with real DB + DI + Security + Routes
     application {

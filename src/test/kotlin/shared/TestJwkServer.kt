@@ -111,7 +111,7 @@ class TestJwkServer {
             }
         }
     }*/
-    server = embeddedServer(Netty, port = 8880) {
+    server = embeddedServer(Netty, port = 8881) {
       routing {
         get("/") {
           // Example response for testing purposes
