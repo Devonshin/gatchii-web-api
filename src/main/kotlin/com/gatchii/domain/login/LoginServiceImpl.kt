@@ -70,13 +70,14 @@ class LoginServiceImpl(
     loginRepository.update(updated)
 
     val rsa = rsaService.getRsa(loginModel.rsaUid)
+    // RefreshTokenService가 userUid를 UUID.fromString()으로 파싱하므로 암호화하지 않은 UUID 문자열 사용
     val claim: Map<String, String> = mapOf(
-      "userUid" to rsaService.encrypt(rsa, loginModel.id.toString()),
-      "userId" to rsaService.encrypt(rsa, loginModel.prefixId),
+      "userUid" to loginModel.id.toString(),  // UUID 문자열 (암호화하지 않음)
+      "userIdEncrypted" to rsaService.encrypt(rsa, loginModel.prefixId),  // 암호화된 userId
       "role" to loginModel.role.name,
     )
     val refreshClaim: Map<String, String> = mapOf(
-      "userUid" to rsaService.encrypt(rsa, loginModel.id.toString())
+      "userUid" to loginModel.id.toString()  // UUID 문자열 (암호화하지 않음)
     )
     val jwtConfig = jwtService.config()
     val refreshJwtConfig = refreshTockenService.config()

@@ -60,9 +60,10 @@ fun Application.configureStatusPages() {
 
     exception<Throwable> { call, cause ->
       logger.error("exception<Throwable>: ", cause)
+      // 테스트 디버깅을 위해 상세 에러 메시지 포함
       call.respond(
         HttpStatusCode.InternalServerError, ErrorResponse(
-          message = HttpStatusCode.InternalServerError.description,
+          message = cause.message ?: HttpStatusCode.InternalServerError.description,
           code = HttpStatusCode.InternalServerError.value,
           path = call.request.uri
         )
