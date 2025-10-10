@@ -19,14 +19,22 @@ fun Route.jwkRoute(jwkService: JwkService) {
 
   val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "JwkRoute")
 
-  get(".well-known/gatchii-jwks.json") {
-
+  // Standard JWKS endpoint for JWT verification
+  get(".well-known/jwks.json") {
     val jwkList = jwkService.findAllJwk()
     call.respondText(
       Json.encodeToString(JwkResponse(jwkList.toSet())),
       contentType = ContentType.Application.Json
     )
+  }
 
+  // Custom Gatchii-specific JWKS endpoint (for backward compatibility)
+  get(".well-known/gatchii-jwks.json") {
+    val jwkList = jwkService.findAllJwk()
+    call.respondText(
+      Json.encodeToString(JwkResponse(jwkList.toSet())),
+      contentType = ContentType.Application.Json
+    )
   }
 
 }

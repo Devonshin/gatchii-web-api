@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
 import shared.common.AbstractIntegrationTest
 import shared.common.IntegrationTest
+import shared.configureTestSecurity
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
@@ -150,9 +151,8 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
       configureSerialization()
       configureValidation()
       configureStatusPages()
-      configureSecurity()
 
-      // JWK 핸들러 초기화 (Koin 초기화 이후, 라우팅 전에 수행)
+      // JWK 핸들러 초기화 (Koin 초기화 이후, Security 설정 전에 수행)
       com.gatchii.domain.jwk.JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
       com.gatchii.domain.jwk.JwkHandler.clearAll()
       kotlinx.coroutines.runBlocking {
@@ -160,6 +160,10 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
         val svc = koin.get<com.gatchii.domain.jwk.JwkService>()
         svc.initializeJwk()
       }
+
+      // Use test-specific security config that reads JWK from DB
+      val jwkService = org.koin.core.context.GlobalContext.get().get<com.gatchii.domain.jwk.JwkService>()
+      configureTestSecurity(jwkService)
 
       configureRouting()
     }
