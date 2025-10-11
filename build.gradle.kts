@@ -12,6 +12,7 @@ val hikaricpVersion: String by project
 val jbcryptVersion: String by project
 val ktorVersion: String by project
 val kotlinCoroutines: String by project
+val jmhVersion = "1.37"
 
 java.setTargetCompatibility(21)
 
@@ -21,6 +22,7 @@ plugins {
   id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
   id("idea")
   kotlin("plugin.power-assert") version "2.0.0"
+  id("me.champeau.jmh") version "0.7.2"
 }
 
 kotlin {
@@ -136,6 +138,11 @@ dependencies {
   // Testcontainers for integration tests (PostgreSQL + JUnit 5)
   testImplementation("org.testcontainers:junit-jupiter:1.19.7")
   testImplementation("org.testcontainers:postgresql:1.19.7")
+
+  // JMH for performance benchmarking
+  jmh("org.openjdk.jmh:jmh-core:$jmhVersion")
+  jmh("org.openjdk.jmh:jmh-generator-annprocess:$jmhVersion")
+  jmhAnnotationProcessor("org.openjdk.jmh:jmh-generator-annprocess:$jmhVersion")
 }
 
 tasks.test {
@@ -199,4 +206,25 @@ sourceSets {
       srcDirs("src/test/kotlin")
     }
   }
+}
+
+// JMH 벤치마크 설정
+jmh {
+  iterations.set(3)  // 워밍업 후 실제 측정 반복 횟수
+  warmupIterations.set(2)  // 워밍업 반복 횟수
+  fork.set(1)  // JVM 포크 수
+  benchmarkMode.set(listOf("thrpt", "avgt"))  // 처리량(throughput)과 평균 시간(average time) 측정
+  timeUnit.set("ms")  // 시간 단위
+  resultFormat.set("JSON")  // 결과 출력 형식
+  profilers.set(listOf("gc"))  // GC 프로파일러 사용
+  
+  // JMH 컴파일 시 Java 버전 명시
+  jvmArgs.add("-Djava.version=21")
+}
+
+// JMH 생성 클래스 컴파일 시 Java 21 사용
+tasks.named<JavaCompile>("jmhCompileGeneratedClasses") {
+  sourceCompatibility = "21"
+  targetCompatibility = "21"
+  options.release.set(21)
 }

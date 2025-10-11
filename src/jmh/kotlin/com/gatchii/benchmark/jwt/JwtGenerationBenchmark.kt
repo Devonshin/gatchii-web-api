@@ -1,0 +1,192 @@
+/**
+ * @author Devonshin
+ * @date 2025-01-19
+ */
+package com.gatchii.benchmark.jwt
+
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.gatchii.plugins.JwtConfig
+import com.gatchii.utils.JwtHandler
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.openjdk.jmh.annotations.*
+import java.security.*
+import java.security.interfaces.ECPrivateKey
+import java.security.interfaces.ECPublicKey
+import java.security.spec.ECGenParameterSpec
+import java.time.OffsetDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
+
+/**
+ * JWT 토큰 생성 성능 벤치마크 테스트
+ * 
+ * 목적:
+ * - JWT 토큰 생성 시 알고리즘별 (ES256, HS256) 성능 차이 측정
+ * - 다양한 페이로드 크기에 따른 성능 영향 분석
+ * - 메모리 사용량과 GC 영향 분석
+ * 
+ * 실행 방법:
+ * ./gradlew jmh
+ * 
+ * 측정 지표:
+ * - Throughput (ops/sec): 초당 처리 가능한 토큰 생성 횟수
+ * - Average Time (ms/op): 토큰 생성 평균 소요 시간
+ * - GC 횟수 및 GC 시간
+ */
+@State(Scope.Benchmark)
+@Warmup(iterations = 2, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
+@Fork(1)
+@BenchmarkMode(Mode.Throughput, Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+open class JwtGenerationBenchmark {
+
+    // ES256 알고리즘용 키 쌍
+    private lateinit var ecKeyPair: KeyPair
+    private lateinit var ecAlgorithm: Algorithm
+    
+    // HS256 알고리즘용 시크릿
+    private lateinit var hmacSecret: ByteArray
+    private lateinit var hmacAlgorithm: Algorithm
+    
+    // JWT 설정
+    private lateinit var jwtConfig: JwtConfig
+    
+    // 다양한 크기의 페이로드
+    private lateinit var smallPayload: Map<String, String>
+    private lateinit var mediumPayload: Map<String, String>
+    private lateinit var largePayload: Map<String, String>
+
+    @Setup
+    fun setup() {
+        // BouncyCastle Provider 추가
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(BouncyCastleProvider())
+        }
+
+        // ES256 (ECDSA with P-256 curve) 키 쌍 생성
+        val keyPairGenerator = KeyPairGenerator.getInstance("EC")
+        keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"))
+        ecKeyPair = keyPairGenerator.generateKeyPair()
+        
+        ecAlgorithm = Algorithm.ECDSA256(
+            ecKeyPair.public as ECPublicKey,
+            ecKeyPair.private as ECPrivateKey
+        )
+
+        // HS256 (HMAC with SHA-256) 시크릿 생성
+        hmacSecret = ByteArray(64)
+        SecureRandom().nextBytes(hmacSecret)
+        hmacAlgorithm = Algorithm.HMAC256(hmacSecret)
+
+        // JWT 설정 초기화
+        jwtConfig = JwtConfig(
+            audience = "test-audience",
+            issuer = "test-issuer",
+            realm = "test-realm",
+            jwkIssuer = "test-jwk-issuer",
+            expireSec = 3600
+        )
+
+        // Small payload: 기본 사용자 정보 (~100 bytes)
+        smallPayload = mapOf(
+            "userId" to "user123",
+            "username" to "testuser",
+            "role" to "USER"
+        )
+
+        // Medium payload: 추가 메타데이터 포함 (~500 bytes)
+        mediumPayload = smallPayload + mapOf(
+            "email" to "[email protected]",
+            "firstName" to "Test",
+            "lastName" to "User",
+            "department" to "Engineering",
+            "location" to "Seoul",
+            "phoneNumber" to "+82-10-1234-5678",
+            "metadata" to "Additional metadata information for testing purposes"
+        )
+
+        // Large payload: 상세한 권한 및 설정 정보 포함 (~2KB)
+        largePayload = mediumPayload + mapOf(
+            "permissions" to "read,write,delete,admin,manage_users,manage_roles,view_analytics,export_data",
+            "preferences" to """{"theme":"dark","language":"ko","timezone":"Asia/Seoul","notifications":true}""",
+            "sessionData" to "x".repeat(1000), // 추가 데이터로 크기 증가
+            "customField1" to "value1",
+            "customField2" to "value2",
+            "customField3" to "value3"
+        )
+    }
+
+    // ES256 - Small Payload
+    @Benchmark
+    fun generateTokenES256Small(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = smallPayload,
+            algorithm = ecAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // ES256 - Medium Payload
+    @Benchmark
+    fun generateTokenES256Medium(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = mediumPayload,
+            algorithm = ecAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // ES256 - Large Payload
+    @Benchmark
+    fun generateTokenES256Large(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = largePayload,
+            algorithm = ecAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // HS256 - Small Payload
+    @Benchmark
+    fun generateTokenHS256Small(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = smallPayload,
+            algorithm = hmacAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // HS256 - Medium Payload
+    @Benchmark
+    fun generateTokenHS256Medium(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = mediumPayload,
+            algorithm = hmacAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // HS256 - Large Payload
+    @Benchmark
+    fun generateTokenHS256Large(): String {
+        return JwtHandler.generate(
+            jwtId = UUID.randomUUID().toString(),
+            claim = largePayload,
+            algorithm = hmacAlgorithm,
+            jwtConfig = jwtConfig
+        )
+    }
+
+    // 기준선 (Baseline) - JWT 없이 단순 UUID 생성
+    @Benchmark
+    fun baselineUuidGeneration(): String {
+        return UUID.randomUUID().toString()
+    }
+}
