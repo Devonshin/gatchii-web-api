@@ -151,6 +151,35 @@ tasks.test {
     excludeTags("integrationTest")
   }
   systemProperty("config.resource", "application-test.conf")
+  
+  // 테스트 병렬 실행 설정
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+  
+  // JUnit 5 병렬 실행 설정
+  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+  systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
+  systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "0.5")
+  
+  // 테스트 메모리 설정
+  minHeapSize = "512m"
+  maxHeapSize = "2048m"
+  
+  // 테스트 리포트 향상
+  reports {
+    html.required.set(true)
+    junitXml.required.set(true)
+  }
+  
+  // 테스트 실행 상세 로그
+  testLogging {
+    events("passed", "skipped", "failed")
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    showStackTraces = true
+    showCauses = true
+    showStandardStreams = false
+  }
 }
 tasks.withType<KotlinCompile>().configureEach {
   compilerOptions.jvmTarget = JVM_21
@@ -165,6 +194,24 @@ tasks.register<Test>("unitTest") {
     includeTags("unitTest")
   }
   systemProperty("config.resource", "application-test.conf")
+  
+  // 유닛 테스트는 더 공격적인 병렬화 가능
+  maxParallelForks = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+  
+  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+  systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
+  systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "1.0")
+  
+  minHeapSize = "256m"
+  maxHeapSize = "1024m"
+  
+  testLogging {
+    events("passed", "skipped", "failed")
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    showStackTraces = true
+  }
 }
 
 tasks.register<Test>("integrationTest") {
@@ -177,6 +224,27 @@ tasks.register<Test>("integrationTest") {
     includeTags("integrationTest")
   }
   systemProperty("config.resource", "application-test.conf")
+  
+  // 통합 테스트는 DB 등 외부 리소스 고려하여 보수적인 병렬화
+  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceAtLeast(1)
+  
+  // 통합 테스트는 클래스 단위로 순차 실행 (메서드는 병렬 가능)
+  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
+  systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
+  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "same_thread")
+  
+  minHeapSize = "512m"
+  maxHeapSize = "2048m"
+  
+  testLogging {
+    events("passed", "skipped", "failed")
+    exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    showStackTraces = true
+    showStandardStreams = true  // 통합 테스트는 로그 출력 유지
+  }
+  
+  // 통합 테스트 타임아웃 설정 (Testcontainers 시작 시간 고려)
+  timeout.set(java.time.Duration.ofMinutes(15))
 }
 tasks.processResources {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
@@ -217,6 +285,9 @@ jmh {
   timeUnit.set("ms")  // 시간 단위
   resultFormat.set("JSON")  // 결과 출력 형식
   profilers.set(listOf("gc"))  // GC 프로파일러 사용
+  
+  // 특정 벤치마크만 실행하려면 includes 설정 (정규식 패턴)
+  includes.set(listOf(".*LoginConcurrencyBenchmark.*"))  // 주석 해제 시 해당 벤치마크만 실행
   
   // JMH 컴파일 시 Java 버전 명시
   jvmArgs.add("-Djava.version=21")

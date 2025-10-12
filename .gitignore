@@ -76,3 +76,7 @@ project-doc
 !CHANGELOG.md
 /htmlReport/
 
+
+project-docs/
+
+*.hprof
