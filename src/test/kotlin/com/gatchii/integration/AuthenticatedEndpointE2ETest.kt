@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import shared.common.AbstractIntegrationTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * 인증된 접근 엔드포인트 E2E 테스트
@@ -32,6 +33,7 @@ import kotlin.test.assertTrue
  * - 실제 데이터베이스와 통신 (Testcontainers)
  * - 전체 인증 플로우 (로그인 → 토큰 획득 → 인증된 리소스 접근) 검증
  */
+@IntegrationTest
 class AuthenticatedEndpointE2ETest : AbstractIntegrationTest() {
 
   private val json = Json { 

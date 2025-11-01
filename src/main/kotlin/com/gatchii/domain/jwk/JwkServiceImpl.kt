@@ -46,9 +46,10 @@ class JwkServiceImpl(
 
   //jwk 1개 추가, active를 inactive로 변경, 제거
   override suspend fun taskProcessing() {
+    val handler = JwkHandler.getInstance()
     val createdJwk = createJwk()
-    JwkHandler.addJwk(createdJwk)
-    JwkHandler.getRemovalJwks()
+    handler.addJwk(createdJwk)
+    handler.getRemovalJwks()
       .forEach { jwk ->
         logger.info("delete jwk : {}", jwk.id.toString())
         deleteJwk(jwk.id!!)
@@ -57,17 +58,18 @@ class JwkServiceImpl(
 
   //초기화
   override suspend fun initializeJwk() {
+    val handler = JwkHandler.getInstance()
     val allUsableJwks: List<JwkModel> = findAllUsableJwk()
     logger.info("allUsableJwks size : ${allUsableJwks.size} ")
     if (allUsableJwks.isEmpty()) {
-      val createdJwks = createJwks(JwkHandler.jwkMaxCapacity())
+      val createdJwks = createJwks(handler.jwkMaxCapacity())
       for (model in createdJwks) {
-        JwkHandler.addJwk(model)
+        handler.addJwk(model)
       }
       logger.info("New create allUsableJwks size : ${allUsableJwks.size} ")
     } else {
       for (jwkModel in allUsableJwks) {
-        JwkHandler.addJwk(jwkModel)
+        handler.addJwk(jwkModel)
       }
     }
     task = taskHandlerProvider {
@@ -80,7 +82,8 @@ class JwkServiceImpl(
   }
 
   override suspend fun getRandomJwk(): JwkModel {
-    return JwkHandler.getRandomActiveJwk().getOrElse {
+    val handler = JwkHandler.getInstance()
+    return handler.getRandomActiveJwk().getOrElse {
       throw NoSuchElementException("Not found usable jwks.")
     }
   }
@@ -139,8 +142,9 @@ class JwkServiceImpl(
   }
 
   override suspend fun findAllUsableJwk(): List<JwkModel> {
+    val handler = JwkHandler.getInstance()
     return jwkRepository
-      .getAllUsable(null, true, JwkHandler.jwkMaxCapacity(), false)
+      .getAllUsable(null, true, handler.jwkMaxCapacity(), false)
       .datas
   }
 

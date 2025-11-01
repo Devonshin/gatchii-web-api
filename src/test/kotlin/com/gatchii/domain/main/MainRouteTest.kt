@@ -21,14 +21,14 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import shared.TestJwkServer
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 
 /**
  * @author Devonshin
  * @date 2025-10-05
  */
-@UnitTest
+@IntegrationTest
 class MainRouteTest {
 
   private val logger: Logger = KtorSimpleLogger(this::class.simpleName ?: "MainRouteTest")

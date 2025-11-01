@@ -12,6 +12,7 @@ import org.junit.jupiter.api.assertThrows
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.*
+import shared.common.UnitTest
 
 /**
  * Package: com.gatchii.domains.rsa
@@ -19,6 +20,7 @@ import java.util.*
  * Date: 12/11/2024
  */
 
+@UnitTest
 class RsaServiceImplTest {
 
   private val rsaRepository = mockk<RsaRepositoryImpl>()

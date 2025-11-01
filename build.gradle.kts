@@ -152,15 +152,11 @@ tasks.test {
   }
   systemProperty("config.resource", "application-test.conf")
   
-  // 테스트 병렬 실행 설정
-  maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
+  // 테스트 병렬 실행 설정 비활성화 (싱글톤 상태 격리 문제 해결)
+  maxParallelForks = 1
   
-  // JUnit 5 병렬 실행 설정
-  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
-  systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
-  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
-  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
-  systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "0.5")
+  // JUnit 5 병렬 실행 비활성화
+  systemProperty("junit.jupiter.execution.parallel.enabled", "false")
   
   // 테스트 메모리 설정
   minHeapSize = "512m"
@@ -195,14 +191,11 @@ tasks.register<Test>("unitTest") {
   }
   systemProperty("config.resource", "application-test.conf")
   
-  // 유닛 테스트는 더 공격적인 병렬화 가능
-  maxParallelForks = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+  // 유닛 테스트도 테스트 격리 문제로 인해 병렬화 비활성화
+  maxParallelForks = 1
   
-  systemProperty("junit.jupiter.execution.parallel.enabled", "true")
-  systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
-  systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "concurrent")
-  systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic")
-  systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "1.0")
+  // JUnit 평렬 실행 비활성화 - junit-platform.properties에서 정의하므로 오버라이드 필요
+  systemProperty("junit.jupiter.execution.parallel.enabled", "false")
   
   minHeapSize = "256m"
   maxHeapSize = "1024m"
@@ -228,7 +221,7 @@ tasks.register<Test>("integrationTest") {
   // 통합 테스트는 DB 등 외부 리소스 고려하여 보수적인 병렬화
   maxParallelForks = (Runtime.getRuntime().availableProcessors() / 4).coerceAtLeast(1)
   
-  // 통합 테스트는 클래스 단위로 순차 실행 (메서드는 병렬 가능)
+  // 통합 테스트: 클래스 단위 순차 (메서드는 병렬) - DB 커넥션 풀 고려
   systemProperty("junit.jupiter.execution.parallel.enabled", "true")
   systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent")
   systemProperty("junit.jupiter.execution.parallel.mode.classes.default", "same_thread")
@@ -242,11 +235,12 @@ tasks.register<Test>("integrationTest") {
     showStackTraces = true
     showStandardStreams = true  // 통합 테스트는 로그 출력 유지
   }
-  
-  // 통합 테스트 타임아웃 설정 (Testcontainers 시작 시간 고려)
-  timeout.set(java.time.Duration.ofMinutes(15))
 }
 tasks.processResources {
+  duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.processTestResources {
   duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 

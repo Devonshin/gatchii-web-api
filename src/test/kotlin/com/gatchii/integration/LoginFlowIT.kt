@@ -38,7 +38,7 @@ import com.gatchii.common.exception.NotFoundUserException
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import java.time.OffsetDateTime
 import java.util.*
@@ -46,7 +46,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-@UnitTest
+@IntegrationTest
 class LoginFlowIT {
 
   companion object {

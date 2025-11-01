@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyLoginQueryList
 import java.time.OffsetDateTime
@@ -23,7 +23,7 @@ import kotlin.test.BeforeTest
  * Created: Devonshin
  * Date: 24/09/2024
  */
-@UnitTest
+@IntegrationTest
 class LoginRepositoryImplUnitTest {
 
   private lateinit var loginRepository: LoginRepository

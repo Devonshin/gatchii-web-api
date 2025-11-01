@@ -67,6 +67,7 @@ class LoginServiceImplUnitTest {
     val loginUserRequest = LoginUserRequest("prefix123", "suffix456", "password123")
 
     coEvery { loginRepository.findUser("prefix123", "suffix456") } returns loginModelStub
+    coEvery { loginRepository.update(any()) } returns loginModelStub
     coEvery { bCryptPasswordEncoder.matches("password123", "encodedPassword") } returns true
     coEvery { jwtService.generate(any()) } returns "jwtToken"
     coEvery { jwtService.config() } returns jwtConfig
@@ -90,13 +91,14 @@ class LoginServiceImplUnitTest {
     assertThat(result?.refreshToken?.token).isEqualTo("refreshJwtToken")
 
     coVerify { loginRepository.findUser("prefix123", "suffix456") }
+    coVerify(exactly = 1) { loginRepository.update(any()) }
     coVerify { bCryptPasswordEncoder.matches("password123", "encodedPassword") }
     coVerify(exactly = 1) { jwtService.generate(any()) }
     coVerify(exactly = 1) { jwtService.config() }
     coVerify(exactly = 1) { refreshTockenService.generate(any()) }
     coVerify(exactly = 1) { refreshTockenService.config() }
     coVerify(exactly = 1) { rsaService.getRsa(any()) }
-    coVerify(exactly = 3) { rsaService.encrypt(any(), any()) }
+    coVerify(exactly = 1) { rsaService.encrypt(any(), any()) }
   }
 
   @Test
@@ -222,6 +224,7 @@ class LoginServiceImplUnitTest {
     val rsaKeyPair = RsaPairHandler.generateRsaDataPair()
     val privateKey = rsaKeyPair.privateKey
     val publicKey = rsaKeyPair.publicKey
+    coEvery { loginRepository.update(any()) } returns loginModel
     coEvery { jwtService.generate(any()) } returns "jwtToken"
     coEvery { jwtService.config() } returns jwtConfig
     coEvery { refreshTockenService.config() } returns refreshJwtConfig
@@ -249,11 +252,12 @@ class LoginServiceImplUnitTest {
     assertThat(jwtModel.refreshToken.token).isEqualTo("refreshjwtToken")
     assertThat(jwtModel.refreshToken.expiresIn).isBetween(refreshExpireSeconds1, refreshExpireSeconds2)
 
+    coVerify(exactly = 1) { loginRepository.update(any()) }
     coVerify(exactly = 1) { jwtService.generate(any()) }
     coVerify(exactly = 1) { refreshTockenService.generate(any()) }
     coVerify(exactly = 1) { jwtService.config() }
     coVerify(exactly = 1) { refreshTockenService.config() }
-    coVerify(exactly = 3) { rsaService.encrypt(any(), any()) }
+    coVerify(exactly = 1) { rsaService.encrypt(any(), any()) }
     coVerify(exactly = 1) { rsaService.getRsa(any()) }
 
   }

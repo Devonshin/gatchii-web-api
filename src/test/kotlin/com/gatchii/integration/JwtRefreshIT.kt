@@ -33,7 +33,7 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import java.time.OffsetDateTime
 import java.util.*
@@ -50,7 +50,7 @@ import kotlin.test.assertTrue
  * - 갱신된 토큰의 유효성 검증
  * - 갱신 전후 토큰이 다름을 확인
  */
-@UnitTest
+@IntegrationTest
 class JwtRefreshIT {
 
   companion object {

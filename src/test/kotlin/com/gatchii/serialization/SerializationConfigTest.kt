@@ -8,7 +8,9 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import shared.common.UnitTest
 
+@UnitTest
 class SerializationConfigTest {
 
   private val json = Json {

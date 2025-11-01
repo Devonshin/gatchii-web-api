@@ -21,12 +21,14 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * StatusPages 플러그인 테스트 클래스
  * 
  * 예외 처리 및 HTTP 상태 코드 핸들링을 테스트합니다.
  */
+@IntegrationTest
 class StatusPagesTest {
 
   /**

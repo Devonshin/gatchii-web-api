@@ -17,7 +17,9 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
+import shared.common.IntegrationTest
 
+@IntegrationTest
 class MainRouteKtTest {
 
   @Test()

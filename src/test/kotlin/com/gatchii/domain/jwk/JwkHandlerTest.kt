@@ -16,29 +16,37 @@ class JwkHandlerTest {
   private val logger = KtorSimpleLogger(this::class::simpleName.get() ?: "JwkHandlerTest")
 
   companion object {
+    private val defaultConfig = ConfigFactory.load("application-test.conf").getConfig("jwk")
+    
     @BeforeAll
     @JvmStatic
     fun init() {
-      JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
+      JwkHandler.resetForTest(defaultConfig)
     }
   }
 
   @BeforeEach
   fun beforeTestSetUp() {
-    JwkHandler.clearAll()
+    // 테스트마다 새로운 JwkHandler 인스턴스로 초기화
+    JwkHandler.resetForTest(defaultConfig)
+    // 저장소 초기화
+    JwkHandler.getInstance().clearAll()
+    // 상태 확인 (초기화 검증)
+    val isEmpty = JwkHandler.getInstance().getJwks().isEmpty()
+    check(isEmpty) { "JwkHandler store should be empty after reset" }
   }
 
   @AfterEach
   fun afterEach() {
-    // 전역 상태 및 설정 복원으로 테스트 간 간섭 방지
-    JwkHandler.clearAll()
-    JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
+    // 전역 상태 및 설정 복원으로 테스트 간 간섭방지
+    JwkHandler.resetForTest(defaultConfig)
   }
 
   @Test
   fun `getConfigValue returns value if key exists`() {
     //given
-    val result = JwkHandler.getConfigValue("maxCapacity")?.toInt()
+    val handler = JwkHandler.getInstance()
+    val result = handler.getConfigValue("maxCapacity")?.toInt()
     //then
     assert(result != null)
   }
@@ -48,16 +56,16 @@ class JwkHandlerTest {
     //given
     val key = "test.nonExistingKey"
     //when
-    val result = JwkHandler.getConfigValue(key)
+    val result = JwkHandler.getInstance().getConfigValue(key)
     //then
     assertNull(result)
   }
 
   @Test
   fun `add jwk does not exceed max capacity`() {
-
     //given
-    val maxCapacity = JwkHandler.getConfigValue("maxCapacity")?.toInt() ?: 0
+    JwkHandler.getInstance().clearAll()
+    val maxCapacity = JwkHandler.getInstance().getConfigValue("maxCapacity")?.toInt() ?: 0
     val maxCapacityPlus = maxCapacity.plus(1)
 
     val jwkModelList = List(maxCapacityPlus) {
@@ -70,29 +78,29 @@ class JwkHandlerTest {
     }
 
     //when
-    jwkModelList.forEach { JwkHandler.addJwk(it) }
+    jwkModelList.forEach { JwkHandler.getInstance().addJwk(it) }
 
     //then
-    val jwks = JwkHandler.getJwks()
+    val jwks = JwkHandler.getInstance().getJwks()
     val activeCount = jwks.count() { it.status == JwkStatus.ACTIVE }
     val inactiveCount = jwks.count() { it.status == JwkStatus.INACTIVE }
     assertEquals(maxCapacity, activeCount)
     assertEquals(inactiveCount, maxCapacityPlus - maxCapacity)
-    assertEquals(maxCapacityPlus, JwkHandler.getJwks().size)
+    assertEquals(maxCapacityPlus, JwkHandler.getInstance().getJwks().size)
   }
 
   @Test
   fun `add jwk removes oldest when capacity exceeded`() {
-
     //given
-    val maxCapacity = JwkHandler.getConfigValue("maxCapacity")?.toInt() ?: 0
+    JwkHandler.getInstance().clearAll()
+    val maxCapacity = JwkHandler.getInstance().getConfigValue("maxCapacity")?.toInt() ?: 0
     val oldestJwk = JwkModel(
       privateKey = "privateKey_oldest",
       publicKey = "publicKey_oldest",
       createdAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addJwk(oldestJwk)
+    JwkHandler.getInstance().addJwk(oldestJwk)
 
     val newJwk = JwkModel(
       privateKey = "privateKey_new",
@@ -101,7 +109,7 @@ class JwkHandlerTest {
       id = UUID.randomUUID()
     )
     repeat(maxCapacity) {
-      JwkHandler.addJwk(
+      JwkHandler.getInstance().addJwk(
         JwkModel(
           privateKey = "privateKey$it",
           publicKey = "publicKey$it",
@@ -112,16 +120,17 @@ class JwkHandlerTest {
     }
 
     //when
-    JwkHandler.addJwk(newJwk)
+    JwkHandler.getInstance().addJwk(newJwk)
 
     //then
-    assertTrue(JwkHandler.getJwks().contains(oldestJwk))
-    assertTrue(JwkHandler.getJwks().contains(newJwk))
+    assertTrue(JwkHandler.getInstance().getJwks().contains(oldestJwk))
+    assertTrue(JwkHandler.getInstance().getJwks().contains(newJwk))
   }
 
   @Test
   fun `add jwk adds to front of list`() {
     //given
+    JwkHandler.getInstance().clearAll()
     val firstJwk = JwkModel(
       privateKey = "privateKey_first",
       publicKey = "publicKey_first",
@@ -136,18 +145,18 @@ class JwkHandlerTest {
     )
 
     //when
-    JwkHandler.addJwk(firstJwk)
-    JwkHandler.addJwk(secondJwk)
+    JwkHandler.getInstance().addJwk(firstJwk)
+    JwkHandler.getInstance().addJwk(secondJwk)
 
     //then
-    assertEquals(secondJwk, JwkHandler.getJwks().first())
-    assertEquals(firstJwk, JwkHandler.getJwks().last())
+    assertEquals(secondJwk, JwkHandler.getInstance().getJwks().first())
+    assertEquals(firstJwk, JwkHandler.getInstance().getJwks().last())
   }
 
   @Test
   fun `add jwk retains correct order after multiple additions`() {
-
     //given
+    JwkHandler.getInstance().clearAll()
     val jwks = List(5) {
       JwkModel(
         privateKey = "privateKey$it",
@@ -158,10 +167,10 @@ class JwkHandlerTest {
     }
 
     //when
-    jwks.forEach { JwkHandler.addJwk(it) }
+    jwks.forEach { JwkHandler.getInstance().addJwk(it) }
 
     //then
-    val deque = JwkHandler.getJwks()
+    val deque = JwkHandler.getInstance().getJwks()
     logger.info("deque size: ${deque.size}")
     jwks.reversed().forEachIndexed { index, jwk ->
       assertEquals(jwk, deque[index])
@@ -170,17 +179,18 @@ class JwkHandlerTest {
 
   @RepeatedTest(30)
   fun `test getRandomUsableJwk when jwks has one element should return the only element`() {
-    // given
+    // given - 문제가 발생할 수 있옜로 명시적 초기화
+    JwkHandler.getInstance().clearAll()
     val jwk = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
       createdAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addJwk(jwk)
+    JwkHandler.getInstance().addJwk(jwk)
 
     // when
-    val randomJwk = JwkHandler.getRandomActiveJwk()
+    val randomJwk = JwkHandler.getInstance().getRandomActiveJwk()
 
     // then
     Assertions.assertEquals(jwk, randomJwk.get())
@@ -201,11 +211,11 @@ class JwkHandlerTest {
       createdAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addJwk(jwk1)
-    JwkHandler.addJwk(jwk2)
+    JwkHandler.getInstance().addJwk(jwk1)
+    JwkHandler.getInstance().addJwk(jwk2)
 
     // when
-    val randomJwk = JwkHandler.getRandomActiveJwk().get()
+    val randomJwk = JwkHandler.getInstance().getRandomActiveJwk().get()
     logger.info("jwk1: $jwk1")
     logger.info("jwk2: $jwk2")
     logger.info("randomJwk: $randomJwk")
@@ -216,6 +226,9 @@ class JwkHandlerTest {
   @Test
   fun `test addJwk moves oldest jwk to inactiveJwks when max capacity is reached`() = runTest {
     // given
+    JwkHandler.getInstance().clearAll()
+    JwkHandler.getInstance().setConfig(ConfigFactory.parseString("maxCapacity = 1"))
+    
     val firstJwk = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
@@ -228,26 +241,25 @@ class JwkHandlerTest {
       createdAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.setConfig(ConfigFactory.parseString("maxCapacity=1"))
 
     // when
-    JwkHandler.addJwk(firstJwk)
-    JwkHandler.addJwk(secondJwk)
+    JwkHandler.getInstance().addJwk(firstJwk)
+    JwkHandler.getInstance().addJwk(secondJwk)
 
     // then
-    val activeJwks = JwkHandler.getJwks().filter { it.status == JwkStatus.ACTIVE }
-    val inactiveJwks = JwkHandler.getJwks().filter { it.status == JwkStatus.INACTIVE }
+    val activeJwks = JwkHandler.getInstance().getJwks().filter { it.status == JwkStatus.ACTIVE }
+    val inactiveJwks = JwkHandler.getInstance().getJwks().filter { it.status == JwkStatus.INACTIVE }
     assert(inactiveJwks.size == 1)
     assert(activeJwks.size == 1)
     assert(activeJwks.contains(secondJwk))
     assert(inactiveJwks.first().id == firstJwk.id)
-    JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
   }
 
   @Test
   fun `test addJwk does not exceed max capacity of activeJwks`() = runTest {
     // given
-    JwkHandler.setConfig(ConfigFactory.parseString("maxCapacity=2"))
+    JwkHandler.getInstance().clearAll()
+    JwkHandler.getInstance().setConfig(ConfigFactory.parseString("maxCapacity = 2"))
 
     val jwk1 = JwkModel(
       privateKey = "privateKey1",
@@ -269,23 +281,24 @@ class JwkHandlerTest {
     )
 
     // when
-    JwkHandler.addJwk(jwk1)
-    JwkHandler.addJwk(jwk2)
-    JwkHandler.addJwk(jwk3)
+    JwkHandler.getInstance().addJwk(jwk1)
+    JwkHandler.getInstance().addJwk(jwk2)
+    JwkHandler.getInstance().addJwk(jwk3)
 
     // then
-    val activeJwks = JwkHandler.getJwks().filter { it.status == JwkStatus.ACTIVE }
+    val activeJwks = JwkHandler.getInstance().getJwks().filter { it.status == JwkStatus.ACTIVE }
 
     assert(activeJwks.size == 2)
     assert(activeJwks.contains(jwk3))
     assert(activeJwks.contains(jwk2))
-    JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
   }
 
   @Test
   fun `test addJwk retains correct order in activeJwks`() = runTest {
     // given
-    JwkHandler.setConfig(ConfigFactory.parseString("maxCapacity=3"))
+    JwkHandler.getInstance().clearAll()
+    JwkHandler.getInstance().setConfig(ConfigFactory.parseString("maxCapacity = 3"))
+    
     val jwk1 = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
@@ -306,24 +319,23 @@ class JwkHandlerTest {
     )
 
     // when
-    JwkHandler.addJwk(jwk1)
-    JwkHandler.addJwk(jwk2)
-    JwkHandler.addJwk(jwk3)
+    JwkHandler.getInstance().addJwk(jwk1)
+    JwkHandler.getInstance().addJwk(jwk2)
+    JwkHandler.getInstance().addJwk(jwk3)
 
     // then
-    val activeJwks = JwkHandler.getJwks().filter { it.status == JwkStatus.ACTIVE }
+    val activeJwks = JwkHandler.getInstance().getJwks().filter { it.status == JwkStatus.ACTIVE }
     assert(activeJwks.size == 3)
     assert(activeJwks[0] == jwk3)
     assert(activeJwks[1] == jwk2)
     assert(activeJwks[2] == jwk1)
-    JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
   }
 
   // Test if removeJwks removes active jwks that are marked as deleted
   @Test
   fun test_removeJwks_removes_active_jwks_that_are_marked_as_deleted() = runTest {
     // given
-    JwkHandler.clearAll()
+    JwkHandler.getInstance().clearAll()
     val newJwk = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
@@ -331,20 +343,20 @@ class JwkHandlerTest {
       deletedAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addJwk(newJwk)
+    JwkHandler.getInstance().addJwk(newJwk)
 
     // when
-    JwkHandler.removeJwks(listOf(newJwk))
+    JwkHandler.getInstance().removeJwks(listOf(newJwk))
 
     // then
-    assertFalse(JwkHandler.getJwks().any { it.id == newJwk.id })
+    assertFalse(JwkHandler.getInstance().getJwks().any { it.id == newJwk.id })
   }
 
   // Test if removeJwks removes inactive jwks that are marked as deleted
   @Test
   fun test_removeJwks_removes_inactive_jwks_that_are_marked_as_deleted() = runTest {
     // given
-    JwkHandler.clearAll()
+    JwkHandler.getInstance().clearAll()
     val newJwk = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
@@ -352,20 +364,20 @@ class JwkHandlerTest {
       deletedAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addInactiveJwk(newJwk)
+    JwkHandler.getInstance().addInactiveJwk(newJwk)
 
     // when
-    JwkHandler.removeJwks(listOf(newJwk))
+    JwkHandler.getInstance().removeJwks(listOf(newJwk))
 
     // then
-    assertFalse(JwkHandler.getJwks().any { it.id == newJwk.id })
+    assertFalse(JwkHandler.getInstance().getJwks().any { it.id == newJwk.id })
   }
 
   // Test if removeJwks does not remove inactive jwks that are not marked as deleted
   @Test
   fun test_removeJwks_remove_inactive_jwk() = runTest {
     // given
-    JwkHandler.clearAll()
+    JwkHandler.getInstance().clearAll()
     val activeNewJwk = JwkModel(
       privateKey = "privateKey1",
       publicKey = "publicKey1",
@@ -378,12 +390,12 @@ class JwkHandlerTest {
       createdAt = OffsetDateTime.now(),
       id = UUID.randomUUID()
     )
-    JwkHandler.addInactiveJwk(inactiveNewJwk)
-    JwkHandler.addJwk(activeNewJwk)
+    JwkHandler.getInstance().addInactiveJwk(inactiveNewJwk)
+    JwkHandler.getInstance().addJwk(activeNewJwk)
     // when
-    JwkHandler.removeJwks(listOf(activeNewJwk, inactiveNewJwk))
+    JwkHandler.getInstance().removeJwks(listOf(activeNewJwk, inactiveNewJwk))
     // then
-    assertFalse(JwkHandler.getJwks().any { it.id == activeNewJwk.id || it.id == inactiveNewJwk.id })
+    assertFalse(JwkHandler.getInstance().getJwks().any { it.id == activeNewJwk.id || it.id == inactiveNewJwk.id })
   }
 
 

@@ -16,6 +16,7 @@ import shared.common.AbstractIntegrationTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * 로그인 엔드포인트 E2E 테스트
@@ -33,6 +34,7 @@ import kotlin.test.assertTrue
  * - 실제 데이터베이스와 통신 (Testcontainers)
  * - 전체 요청-응답 흐름 검증
  */
+@IntegrationTest
 class LoginEndpointE2ETest : AbstractIntegrationTest() {
 
   @BeforeAll

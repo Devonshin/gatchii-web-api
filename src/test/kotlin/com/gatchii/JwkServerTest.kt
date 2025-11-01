@@ -10,10 +10,10 @@ import io.ktor.util.logging.*
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import kotlin.test.Test
 
-@UnitTest
+@IntegrationTest
 class JwkServerTest {
   companion object {
     val logger = KtorSimpleLogger(this::class.simpleName ?: "JwkServerTest")

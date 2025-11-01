@@ -17,7 +17,7 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import java.math.BigInteger
 import java.security.KeyFactory
@@ -44,7 +44,7 @@ import kotlin.test.assertFailsWith
  * 4. JWK 형식 정확성 검증 (keys 배열, kty, use, kid, n, e 필드 존재 확인)
  * 5. RSA 공개키 JWK 형식 준수 여부 검증
  */
-@UnitTest
+@IntegrationTest
 class JwkEndpointIT {
 
   companion object {

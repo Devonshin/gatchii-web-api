@@ -20,12 +20,14 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * Validation 플러그인 테스트 클래스
  * 
  * RequestValidation 플러그인을 통한 입력 검증 로직을 테스트합니다.
  */
+@IntegrationTest
 class ValidatingTest {
 
   /**

@@ -27,11 +27,19 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       
-      # Gradle 빌드 캐시 설정
+      # Gradle 빌드 캐시 설정 (의존성 캐시 포함)
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+          gradle-home-cache-excludes: |
+            caches/build-cache-*
+            caches/*/scripts
+            caches/*/scripts-remapped
       
       - name: Verify Docker availability
         if: matrix.test-type == 'integration'
@@ -42,17 +50,27 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
       
-      # 단위 테스트 실행
+      # 단위 테스트 실행 (빌드 캐시 사용)
       - name: Run Unit Tests
         if: matrix.test-type == 'unit'
-        run: ./gradlew --console=plain test
+        run: |
+          START_TIME=$(date +%s)
+          ./gradlew --console=plain --build-cache test
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "Unit Test Duration: ${DURATION}s" >> $GITHUB_STEP_SUMMARY
       
-      # 통합 테스트 실행
+      # 통합 테스트 실행 (빌드 캐시 사용)
       - name: Run Integration Tests
         if: matrix.test-type == 'integration'
         env:
           CI: 'true'
-        run: ./gradlew --console=plain integrationTest
+        run: |
+          START_TIME=$(date +%s)
+          ./gradlew --console=plain --build-cache integrationTest
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "Integration Test Duration: ${DURATION}s" >> $GITHUB_STEP_SUMMARY
       
       # 테스트 리포트 업로드
       - name: Upload Test Results
@@ -99,3 +117,12 @@ jobs:
           path: test-results/**/*.xml
           reporter: java-junit
           fail-on-error: true
+      
+      # 성능 메트릭 요약
+      - name: Performance Metrics Summary
+        if: always()
+        run: |
+          echo "## CI/CD Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Execution Times" >> $GITHUB_STEP_SUMMARY
+          echo "Check individual job summaries for detailed timings" >> $GITHUB_STEP_SUMMARY

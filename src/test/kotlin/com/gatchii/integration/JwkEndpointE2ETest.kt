@@ -14,6 +14,7 @@ import shared.common.AbstractIntegrationTest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * JWK 엔드포인트 E2E 테스트
@@ -32,6 +33,7 @@ import kotlin.test.assertTrue
  * - 실제 데이터베이스와 통신 (Testcontainers)
  * - JWK 응답 구조 검증
  */
+@IntegrationTest
 class JwkEndpointE2ETest : AbstractIntegrationTest() {
 
   private val json = Json { 

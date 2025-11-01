@@ -12,7 +12,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.DisplayName
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
  * @author Devonshin
  * @date 2025-09-14
  */
-@UnitTest
+@IntegrationTest
 class JwkRouteTest {
 
 

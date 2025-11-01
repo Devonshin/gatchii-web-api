@@ -31,12 +31,13 @@ class JwtHandlerTest {
     expireSec = 60
   )
 
-  private var jwtStr: String = JwtHandler.generate("id", claim, algorithm, jwtConfig)
+  private var jwtStr: String = ""
 
   @BeforeEach
   fun setUp() {
     unmockkAll()
     unmockkObject(JwtHandler)
+    jwtStr = JwtHandler.generate("id", claim, algorithm, jwtConfig)
   }
 
   @Test

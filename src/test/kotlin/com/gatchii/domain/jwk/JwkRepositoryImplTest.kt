@@ -15,7 +15,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.repository.DatabaseFactoryForTest
 import java.time.OffsetDateTime
 import java.util.*
@@ -23,7 +23,7 @@ import kotlin.test.BeforeTest
 
 /** Package: com.gatchii.domains.jwk Created: Devonshin Date: 18/12/2024 */
 
-@UnitTest
+@IntegrationTest
 class JwkRepositoryImplTest {
   private val log = KtorSimpleLogger(this::class.simpleName ?: "JwkRepositoryImplTest")
   private lateinit var jwkRepository: JwkRepositoryImpl

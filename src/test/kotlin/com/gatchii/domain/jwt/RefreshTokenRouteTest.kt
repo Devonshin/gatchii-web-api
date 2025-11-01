@@ -25,14 +25,14 @@ import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import shared.TestJwkServer
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import shared.repository.DatabaseFactoryForTest
 import java.time.OffsetDateTime
 import java.util.*
 import kotlin.test.Test
 
-@UnitTest
+@IntegrationTest
 class RefreshTokenRouteTest {
   val config = HoconApplicationConfig(ConfigFactory.load("application-test.conf"))
   private val refreshTokenRepository: RefreshTokenRepository = mockk()

@@ -153,8 +153,8 @@ class LoginFlowPostgresIT : AbstractIntegrationTest() {
       configureStatusPages()
 
       // JWK 핸들러 초기화 (Koin 초기화 이후, Security 설정 전에 수행)
-      com.gatchii.domain.jwk.JwkHandler.setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
-      com.gatchii.domain.jwk.JwkHandler.clearAll()
+      com.gatchii.domain.jwk.JwkHandler.getInstance().setConfig(ConfigFactory.load("application-test.conf").getConfig("jwk"))
+      com.gatchii.domain.jwk.JwkHandler.getInstance().clearAll()
       kotlinx.coroutines.runBlocking {
         val koin = org.koin.core.context.GlobalContext.get()
         val svc = koin.get<com.gatchii.domain.jwk.JwkService>()

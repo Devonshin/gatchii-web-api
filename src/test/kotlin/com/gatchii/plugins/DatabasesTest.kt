@@ -20,12 +20,14 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import shared.common.IntegrationTest
 
 /**
  * Database 플러그인 테스트 클래스
  * 
  * 데이터베이스 연결, 마이그레이션, 설정 등을 테스트합니다.
  */
+@IntegrationTest
 class DatabasesTest {
 
   /**

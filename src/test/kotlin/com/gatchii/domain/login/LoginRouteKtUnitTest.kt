@@ -29,7 +29,7 @@ import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.common.setupCommonApp
 import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyLoginQueryList
@@ -38,7 +38,7 @@ import java.util.*
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 
-@UnitTest
+@IntegrationTest
 class LoginRouteKtUnitTest {
 
   companion object {

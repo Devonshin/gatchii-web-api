@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import shared.common.UnitTest
+import shared.common.IntegrationTest
 import shared.repository.DatabaseFactoryForTest
 import shared.repository.dummyRsaQueryList
 import java.time.OffsetDateTime
@@ -25,7 +25,7 @@ import kotlin.test.assertNotNull
  * Date: 11/11/2024
  */
 
-@UnitTest
+@IntegrationTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class RsaRepositoryImplTest {
 
